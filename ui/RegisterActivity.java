@@ -10,8 +10,6 @@ import android.widget.Toast;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.data.StaticVar;
 
@@ -19,11 +17,9 @@ public class RegisterActivity extends AppCompatActivity {
 
     private final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
-    @BindView(R.id.etEmail)
+
     EditText editTextUsername;
-    @BindView(R.id.etPassword)
     EditText editTextPassword;
-    @BindView(R.id.etRePassword)
     EditText editTextRepeatPassword;
 
     public static String STR_EXTRA_ACTION_REGISTER = "register";
@@ -32,7 +28,6 @@ public class RegisterActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
-        ButterKnife.bind(RegisterActivity.this);
     }
 
     public void clickRegister(View view) {

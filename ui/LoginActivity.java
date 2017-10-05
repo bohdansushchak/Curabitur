@@ -38,9 +38,8 @@ public class LoginActivity extends AppCompatActivity {
     private final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
-    @BindView(R.id.etUserName)
+
     private EditText editTextUsername;
-    @BindView(R.id.etPassword)
     private EditText editTextPassword;
 
     private LovelyProgressDialog waitingDialog;
@@ -55,9 +54,8 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        //editTextUsername = (EditText) findViewById(R.id.etUserName);
-        //editTextPassword = (EditText) findViewById(R.id.etPassword);
-        ButterKnife.bind(LoginActivity.this);
+        editTextUsername = (EditText) findViewById(R.id.etUserName);
+        editTextPassword = (EditText) findViewById(R.id.etPassword);
         firstTimeAccess = true;
         initFirebase();
     }
@@ -69,8 +67,6 @@ public class LoginActivity extends AppCompatActivity {
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 user = firebaseAuth.getCurrentUser();
                 if (user != null) {
-                    // User is signed in
-                    //StaticVar.UID = user.getUid();
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
                     if (firstTimeAccess) {
                         startActivity(new Intent(LoginActivity.this, MainActivity.class));
