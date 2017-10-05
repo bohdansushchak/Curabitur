@@ -1,16 +1,16 @@
 package sushchak.bohdan.curabitur.ui;
 
+import android.app.Activity;
 import android.app.Fragment;
-import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -21,21 +21,20 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.model.Thread;
 
 
-public class ThreadsFragment extends Fragment {
 
-    // TODO: Customize parameter argument names
-    private static final String ARG_COLUMN_COUNT = "column-count";
-    // TODO: Customize parameters
-    private int mColumnCount = 1;
+public class ThreadsFragment extends Fragment{
+
     private OnListFragmentInteractionListener mListener;
 
     private ArrayList<Thread> listThread;
     private MyThreadsRecyclerViewAdapter adapter;
+    private final String TAG = "ThreadsFragment";
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -49,7 +48,6 @@ public class ThreadsFragment extends Fragment {
     public static ThreadsFragment newInstance(int columnCount) {
         ThreadsFragment fragment = new ThreadsFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_COLUMN_COUNT, columnCount);
         fragment.setArguments(args);
         return fragment;
     }
@@ -59,10 +57,6 @@ public class ThreadsFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         listThread = new ArrayList<>();
-
-        if (getArguments() != null) {
-            mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
-        }
 
         getListThread();
     }
@@ -74,10 +68,10 @@ public class ThreadsFragment extends Fragment {
 
         // Set the adapter
         if (view instanceof RecyclerView) {
-            Context context = view.getContext();
             RecyclerView recyclerView = (RecyclerView) view;
             adapter = new MyThreadsRecyclerViewAdapter(listThread, mListener);
             recyclerView.setAdapter(adapter);
+
         }
         return view;
     }
@@ -94,12 +88,11 @@ public class ThreadsFragment extends Fragment {
                         Thread thread = new Thread();
                         thread.idThread = idThread;
                         listThread.add(thread);
-                        Log.d("...", idThread);
+                        Log.d(TAG, idThread);
                     }
                     adapter.notifyDataSetChanged();
                 }
             }
-
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
@@ -107,15 +100,18 @@ public class ThreadsFragment extends Fragment {
         });
     }
 
-
+    @SuppressWarnings("deprecation")
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnListFragmentInteractionListener) {
-            mListener = (OnListFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnListFragmentInteractionListener");
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            if (activity instanceof OnListFragmentInteractionListener) {
+                mListener = (OnListFragmentInteractionListener) activity;
+                Log.d(TAG, "context = OnListFragmentInteractionListener");
+            } else {
+                throw new RuntimeException(activity.toString()
+                        + " must implement OnListFragmentInteractionListener");
+            }
         }
     }
 
@@ -125,18 +121,70 @@ public class ThreadsFragment extends Fragment {
         mListener = null;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
         void onListFragmentInteraction(Thread item);
+    }
+
+    public static class MyThreadsRecyclerViewAdapter extends RecyclerView.Adapter<MyThreadsRecyclerViewAdapter.ViewHolder> {
+
+        private final List<Thread> mValues;
+        private final OnListFragmentInteractionListener mListener;
+        private final String TAG = "MyThreadsRecyclerViewAdapter";
+
+        public MyThreadsRecyclerViewAdapter(List<Thread> items, OnListFragmentInteractionListener listener) {
+            mValues = items;
+            mListener = listener;
+        }
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.fragment_threads, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(final ViewHolder holder, int position) {
+            holder.mItem = mValues.get(position);
+            holder.mIdView.setText(mValues.get(position).idThread);
+            //holder.mContentView.setText(mValues.get(position).content);
+
+
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (null != mListener) {
+                        mListener.onListFragmentInteraction(holder.mItem);
+                        Log.d(TAG, holder.mItem.idThread);
+                    }
+                    else Log.d(TAG, "mListener = null");
+                }
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return mValues.size();
+        }
+
+        public class ViewHolder extends RecyclerView.ViewHolder {
+            public final View mView;
+            public final TextView mIdView;
+            public final TextView mContentView;
+            public Thread mItem;
+
+            public ViewHolder(View view) {
+                super(view);
+                mView = view;
+                mIdView = (TextView) view.findViewById(R.id.id);
+                mContentView = (TextView) view.findViewById(R.id.content);
+            }
+
+            @Override
+            public String toString() {
+                return super.toString() + " '" + mContentView.getText() + "'";
+            }
+        }
     }
 }

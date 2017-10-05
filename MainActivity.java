@@ -15,14 +15,18 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import sushchak.bohdan.curabitur.data.StaticVar;
+import sushchak.bohdan.curabitur.model.Thread;
+import sushchak.bohdan.curabitur.ui.ChatActivity;
 import sushchak.bohdan.curabitur.ui.LoginActivity;
 import sushchak.bohdan.curabitur.ui.ThreadsFragment;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, ThreadsFragment.OnListFragmentInteractionListener
 {
     private static String TAG = "MainActivity";
 
@@ -62,7 +66,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 user = firebaseAuth.getCurrentUser();
                 if(user != null){
-                    // StaticVar.UID = user.getUid();
                 } else {
                     MainActivity.this.finish();
                     startActivity(new Intent(MainActivity.this, LoginActivity.class));
@@ -101,4 +104,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+
+    @Override
+    public void onListFragmentInteraction(Thread item) {
+        Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+        intent.putExtra(StaticVar.STR_EXTRA_CHAT_ID, item.idThread);
+        startActivity(intent);
+        Log.d(TAG, item.idThread);
+    }
 }
