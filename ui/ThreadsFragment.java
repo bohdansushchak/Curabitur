@@ -1,15 +1,18 @@
 package sushchak.bohdan.curabitur.ui;
 
+
 import android.app.Activity;
-import android.app.Fragment;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -28,7 +31,7 @@ import sushchak.bohdan.curabitur.model.Thread;
 
 
 
-public class ThreadsFragment extends Fragment{
+public class ThreadsFragment extends Fragment {
 
     private final String TAG = "ThreadsFragment";
 
@@ -69,6 +72,7 @@ public class ThreadsFragment extends Fragment{
             adapter = new MyThreadsRecyclerViewAdapter(listThread, mListener);
             recyclerView.setAdapter(adapter);
 
+
         }
         return view;
     }
@@ -81,12 +85,16 @@ public class ThreadsFragment extends Fragment{
                     HashMap mapThreads = (HashMap) dataSnapshot.getValue();
                     Iterator iterator = mapThreads.keySet().iterator();
                     while (iterator.hasNext()){
-                        String idThread = ((HashMap) mapThreads.get(iterator.next().toString())).get("idthread").toString();
+                        HashMap threadData = (HashMap) mapThreads.get(iterator.next());
+                        String idThread =  threadData.get("thread_id").toString();
+                        String threadName = threadData.get("title_name").toString();
                         Thread thread = new Thread();
-                        thread.idThread = idThread;
+                        thread.thread_id = idThread;
+                        thread.title_name = threadName;
                         listThread.add(thread);
                         Log.d(TAG, idThread);
                     }
+                    Log.d(TAG, mapThreads.toString());
                     adapter.notifyDataSetChanged();
                 }
             }
@@ -101,15 +109,12 @@ public class ThreadsFragment extends Fragment{
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             if (activity instanceof OnListFragmentInteractionListener) {
                 mListener = (OnListFragmentInteractionListener) activity;
-                Log.d(TAG, "context = OnListFragmentInteractionListener");
             } else {
                 throw new RuntimeException(activity.toString()
                         + " must implement OnListFragmentInteractionListener");
             }
-        }
     }
 
     @Override
@@ -119,7 +124,6 @@ public class ThreadsFragment extends Fragment{
     }
 
     public interface OnListFragmentInteractionListener {
-        // TODO: Update argument type and name
         void onListFragmentInteraction(Thread item);
     }
 
@@ -144,20 +148,21 @@ public class ThreadsFragment extends Fragment{
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-            holder.mItem = listContact.get(position);
-            holder.mIdView.setText(listContact.get(position).idThread);
+            final Thread thread = listContact.get(position);
+            holder.mIdView.setText(listContact.get(position).title_name);
             //holder.mContentView.setText(listContact.get(position).content);
-
 
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (null != mListener) {
-                        mListener.onListFragmentInteraction(holder.mItem);
-                        Log.d(TAG, holder.mItem.idThread);
+                        mListener.onListFragmentInteraction(thread);
+                        Log.d(TAG, thread.thread_id);
                     }
+                    Log.d(TAG, thread.thread_id);
                 }
             });
+
         }
 
         @Override
@@ -165,10 +170,11 @@ public class ThreadsFragment extends Fragment{
             return listContact.size();
         }
 
-        public class ViewHolder extends RecyclerView.ViewHolder {
+
+        public class ViewHolder extends RecyclerView.ViewHolder{
             public final TextView mIdView;
             public final TextView mContentView;
-            public Thread mItem;
+            //public Thread mItem;
 
             public ViewHolder(View view) {
                 super(view);
@@ -180,6 +186,8 @@ public class ThreadsFragment extends Fragment{
             public String toString() {
                 return super.toString() + " '" + mContentView.getText() + "'";
             }
+
+
         }
     }
 }

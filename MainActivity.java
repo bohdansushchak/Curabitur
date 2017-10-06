@@ -1,12 +1,13 @@
 package sushchak.bohdan.curabitur;
 
 
-import android.app.Fragment;
-import android.app.FragmentTransaction;
+
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
 
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -15,10 +16,16 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+
+import java.util.HashMap;
 
 import sushchak.bohdan.curabitur.data.StaticVar;
 import sushchak.bohdan.curabitur.model.Contact;
@@ -50,6 +57,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
+        initFireBase();
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -59,12 +69,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        threadsFragment = new ThreadsFragment();
-        fragmentTransaction = getFragmentManager().beginTransaction();
-        fragmentTransaction.add(R.id.frameLayout, threadsFragment);
-        fragmentTransaction.commit();
 
-        initFireBase();
     }
 
     private void initFireBase(){
@@ -74,6 +79,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 user = firebaseAuth.getCurrentUser();
                 if(user != null){
+                    FirebaseDatabase.getInstance().getReference()
+                            .child("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid())
+                            .addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    if(dataSnapshot.getValue() != null){
+                                        HashMap mapContactData = (HashMap) dataSnapshot.getValue();
+                                        StaticVar.currentUser = new Contact();
+                                        StaticVar.currentUser.contactId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                                        StaticVar.currentUser.name =  mapContactData.get("name").toString();
+                                        StaticVar.currentUser.email = mapContactData.get("email").toString();
+                                        StaticVar.currentUser.avatar = mapContactData.get("avatar").toString();
+
+                                    }
+                                }
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
+                                }
+                            });
+
+                    threadsFragment = new ThreadsFragment();
+                    fragmentTransaction = getSupportFragmentManager().beginTransaction();
+                    fragmentTransaction.add(R.id.frameLayout, threadsFragment);
+                    fragmentTransaction.commit();
+
                 } else {
                     MainActivity.this.finish();
                     startActivity(new Intent(MainActivity.this, LoginActivity.class));
@@ -82,6 +113,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         };
     }
+
 
     @Override
     protected void onStart() {
@@ -104,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_friends:{
 
                 contactsFragment = new ContactsFragment();
-                fragmentTransaction = getFragmentManager().beginTransaction();
+                fragmentTransaction = getSupportFragmentManager().beginTransaction();
                 fragmentTransaction.detach(threadsFragment);
                 fragmentTransaction.add(R.id.frameLayout, contactsFragment);
                 fragmentTransaction.commit();
@@ -127,13 +159,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onListFragmentInteraction(Thread item) {
+        Log.d(TAG, item.thread_id);
         Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-        intent.putExtra(StaticVar.STR_EXTRA_CHAT_ID, item.idThread);
+        intent.putExtra(StaticVar.STR_EXTRA_CHAT_ID, item.thread_id);
         startActivity(intent);
     }
 
     @Override
     public void onListFragmentInteraction(Contact item) {
-        Toast.makeText(MainActivity.this, item.toString(), Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+        intent.putExtra(StaticVar.STR_EXTRA_CONTACT_ID, item.contactId);
+        intent.putExtra(StaticVar.STR_EXTRA_CONTACT_NAME, item.name);
+        startActivity(intent);
     }
 }

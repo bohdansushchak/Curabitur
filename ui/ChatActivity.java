@@ -2,17 +2,13 @@ package sushchak.bohdan.curabitur.ui;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -30,19 +26,24 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import de.hdodenhof.circleimageview.CircleImageView;
 import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.data.StaticVar;
+import sushchak.bohdan.curabitur.model.Contact;
 import sushchak.bohdan.curabitur.model.Message;
+import sushchak.bohdan.curabitur.model.Thread;
 
 public class ChatActivity extends AppCompatActivity {
 
     public final static int VIEW_TYPE_YOU_MESSAGE = 0;
     public final static int VIEW_TYPE_FROM_MESSAGE = 1;
 
+    //private String currentUser = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
     private final String TAG = "ChatActivity";
     private RecyclerView rvChat;
     private String idChat;
+
+    private Contact contact;
 
     private ImageButton btnSend;
     private EditText etMessage;
@@ -61,16 +62,20 @@ public class ChatActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbarChatActivity);
         setSupportActionBar(toolbar);
 
+        contact = new Contact();
         Intent intent = getIntent();
         idChat = intent.getStringExtra(StaticVar.STR_EXTRA_CHAT_ID);
+        if(idChat == null){
+            contact.contactId = intent.getStringExtra(StaticVar.STR_EXTRA_CONTACT_ID);
+            contact.name = intent.getStringExtra(StaticVar.STR_EXTRA_CONTACT_NAME);
+            createNewChat();
+        }
+
         messages = new ArrayList<>();
 
         btnSend = (ImageButton) findViewById(R.id.btnSend);
         etMessage = (EditText) findViewById(R.id.etMessage);
         rvChat = (RecyclerView) findViewById(R.id.rvChat);
-
-
-
 
 
         adapter = new ListMessageAdapter(ChatActivity.this, messages);
@@ -116,6 +121,26 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
+    private void createNewChat(){
+        Thread thread = new Thread();
+
+        thread.thread_id = FirebaseDatabase.getInstance().getReference().child("users/" + StaticVar.currentUser.contactId + "/threads").push().getKey();
+
+        thread.title_name = contact.name;
+        FirebaseDatabase.getInstance().getReference().child("users/" + StaticVar.currentUser.contactId + "/threads").push().setValue(thread);
+
+        HashMap<String, Object> details = new HashMap<>();
+        details.put("creation_date", System.currentTimeMillis());
+        details.put("creator_id", StaticVar.currentUser.contactId);
+
+        FirebaseDatabase.getInstance().getReference().child("threads/" + thread.thread_id + "/details").setValue(details);
+
+        thread.title_name = StaticVar.currentUser.name;
+        FirebaseDatabase.getInstance().getReference().child("users/" + contact.contactId + "/threads").push().setValue(thread);
+
+        idChat = thread.thread_id;
+    }
+
     public void onClickSend(View view){
         String content = etMessage.getText().toString().trim();
         if(content.length() > 0){
@@ -123,7 +148,7 @@ public class ChatActivity extends AppCompatActivity {
             Message newMessage = new Message();
             newMessage.text = content;
             //TODO: change it
-            newMessage.idSender = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            newMessage.idSender = StaticVar.currentUser.contactId;
             newMessage.timestamp = System.currentTimeMillis();
             FirebaseDatabase.getInstance().getReference().child("threads/" + idChat + "/messages").push().setValue(newMessage);
         }

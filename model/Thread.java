@@ -1,7 +1,8 @@
 package sushchak.bohdan.curabitur.model;
 
 
-
 public class Thread {
-    public String idThread;
+    public String thread_id;
+    public String title_name;
 }
+

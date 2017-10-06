@@ -1,14 +1,13 @@
 package sushchak.bohdan.curabitur.ui;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -133,7 +132,6 @@ public class ContactsFragment extends Fragment {
     @Override
     public void onAttach(Activity context) {
         super.onAttach(context);
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             if (context instanceof OnListFragmentInteractionListener) {
                 this.context = context;
                 mListener = (OnListFragmentInteractionListener) context;
@@ -141,7 +139,6 @@ public class ContactsFragment extends Fragment {
                 throw new RuntimeException(context.toString()
                         + " must implement OnListFragmentInteractionListener");
             }
-        }
     }
 
     @Override
