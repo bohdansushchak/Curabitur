@@ -21,18 +21,26 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import sushchak.bohdan.curabitur.data.StaticVar;
+import sushchak.bohdan.curabitur.model.Contact;
 import sushchak.bohdan.curabitur.model.Thread;
 import sushchak.bohdan.curabitur.ui.ChatActivity;
+import sushchak.bohdan.curabitur.ui.ContactsFragment;
 import sushchak.bohdan.curabitur.ui.LoginActivity;
 import sushchak.bohdan.curabitur.ui.ThreadsFragment;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, ThreadsFragment.OnListFragmentInteractionListener
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
+        ThreadsFragment.OnListFragmentInteractionListener,
+        ContactsFragment.OnListFragmentInteractionListener
 {
     private static String TAG = "MainActivity";
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseUser user;
+
+    private FragmentTransaction fragmentTransaction;
+    private Fragment threadsFragment;
+    private Fragment contactsFragment;
 
 
     @Override
@@ -51,10 +59,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        Fragment fragment = new ThreadsFragment();
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.add(R.id.frameLayout, fragment);
-        ft.commit();
+        threadsFragment = new ThreadsFragment();
+        fragmentTransaction = getFragmentManager().beginTransaction();
+        fragmentTransaction.add(R.id.frameLayout, threadsFragment);
+        fragmentTransaction.commit();
 
         initFireBase();
     }
@@ -93,11 +101,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
+            case R.id.nav_friends:{
+
+                contactsFragment = new ContactsFragment();
+                fragmentTransaction = getFragmentManager().beginTransaction();
+                fragmentTransaction.detach(threadsFragment);
+                fragmentTransaction.add(R.id.frameLayout, contactsFragment);
+                fragmentTransaction.commit();
+                break;
+            }
+
             case R.id.nav_out: {
                 mAuth.signOut();
                 break;
             }
+
         }
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -110,6 +130,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Intent intent = new Intent(MainActivity.this, ChatActivity.class);
         intent.putExtra(StaticVar.STR_EXTRA_CHAT_ID, item.idThread);
         startActivity(intent);
-        Log.d(TAG, item.idThread);
+    }
+
+    @Override
+    public void onListFragmentInteraction(Contact item) {
+        Toast.makeText(MainActivity.this, item.toString(), Toast.LENGTH_SHORT).show();
     }
 }

@@ -1,11 +1,18 @@
 package sushchak.bohdan.curabitur.ui;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -18,6 +25,9 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -27,6 +37,9 @@ import sushchak.bohdan.curabitur.model.Message;
 
 public class ChatActivity extends AppCompatActivity {
 
+    public final static int VIEW_TYPE_YOU_MESSAGE = 0;
+    public final static int VIEW_TYPE_FROM_MESSAGE = 1;
+
     private final String TAG = "ChatActivity";
     private RecyclerView rvChat;
     private String idChat;
@@ -34,7 +47,11 @@ public class ChatActivity extends AppCompatActivity {
     private ImageButton btnSend;
     private EditText etMessage;
 
+    private ArrayList<Message> messages;
+
     private ListMessageAdapter adapter;
+    private LinearLayoutManager linearManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,10 +63,20 @@ public class ChatActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         idChat = intent.getStringExtra(StaticVar.STR_EXTRA_CHAT_ID);
+        messages = new ArrayList<>();
 
         btnSend = (ImageButton) findViewById(R.id.btnSend);
         etMessage = (EditText) findViewById(R.id.etMessage);
         rvChat = (RecyclerView) findViewById(R.id.rvChat);
+
+
+
+
+
+        adapter = new ListMessageAdapter(ChatActivity.this, messages);
+        linearManager = new LinearLayoutManager(ChatActivity.this, LinearLayoutManager.VERTICAL, false);
+        rvChat.setLayoutManager(linearManager);
+        rvChat.setAdapter(adapter);
 
         FirebaseDatabase.getInstance().getReference().child("threads/" + idChat + "/messages").addChildEventListener(new ChildEventListener() {
             @Override
@@ -60,8 +87,10 @@ public class ChatActivity extends AppCompatActivity {
                     message.idSender = (String) mapMessage.get("idSender");
                     message.text = (String) mapMessage.get("text");
                     message.timestamp = (Long) mapMessage.get("timestamp");
+                    messages.add(message);
                     Log.d(TAG, message.toString());
-                    //adapter.notifyDataSetChanged();
+                    adapter.notifyDataSetChanged();
+                    linearManager.scrollToPosition(messages.size() - 1);
                 }
             }
 
@@ -103,42 +132,74 @@ public class ChatActivity extends AppCompatActivity {
 
 
     class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
+        private Context context;
+        private ArrayList<Message> messages;
+
+        public ListMessageAdapter(Context context, ArrayList<Message> messages){
+            this.context = context;
+            this.messages = messages;
+
+        }
 
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            if(viewType == ChatActivity.VIEW_TYPE_YOU_MESSAGE){
+                View view = LayoutInflater.from(context).inflate(R.layout.item_msg_you, parent, false);
+                return new ItemMessageUserHolder(view);
+            }else if(viewType == ChatActivity.VIEW_TYPE_FROM_MESSAGE){
+                View view = LayoutInflater.from(context).inflate(R.layout.item_msg_from, parent, false);
+                return new ItemMessageFriendHolder(view);
+            }
             return null;
         }
 
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+            if(holder instanceof ItemMessageUserHolder){
+                ((ItemMessageUserHolder) holder).tvMessage.setText(messages.get(position).text);
+                DateFormat df = new SimpleDateFormat("HH:mm:ss");
+                String time = df.format(messages.get(position).timestamp);
+                ((ItemMessageUserHolder) holder).tvTime.setText(time);
+            } else if(holder instanceof ItemMessageFriendHolder){
+                ((ItemMessageFriendHolder) holder).tvMessage.setText(messages.get(position).text);
+                DateFormat df = new SimpleDateFormat("HH:mm:ss");
+                String time = df.format(messages.get(position).timestamp);
+                ((ItemMessageFriendHolder) holder).tvTime.setText(time);
+            }
+        }
 
+        @Override
+        public int getItemViewType(int position) {
+            return messages.get(position).idSender.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                    ? ChatActivity.VIEW_TYPE_YOU_MESSAGE
+                    : ChatActivity.VIEW_TYPE_FROM_MESSAGE;
         }
 
         @Override
         public int getItemCount() {
-            return 0;
+            return messages.size();
         }
     }
 
 class ItemMessageUserHolder extends RecyclerView.ViewHolder {
-    public TextView txtContent;
-    public CircleImageView avata;
+    public TextView tvMessage;
+    public TextView tvTime;
 
     public ItemMessageUserHolder(View itemView) {
         super(itemView);
-        //txtContent = (TextView) itemView.findViewById(R.id.textContentUser);
-        //avata = (CircleImageView) itemView.findViewById(R.id.imageView2);
+        tvMessage = (TextView) itemView.findViewById(R.id.tvMsgYou);
+        tvTime = (TextView) itemView.findViewById(R.id.tvTimeYou);
     }
 }
 
 class ItemMessageFriendHolder extends RecyclerView.ViewHolder {
-    public TextView txtContent;
-    public CircleImageView avata;
+    public TextView tvMessage;
+    public TextView tvTime;
 
     public ItemMessageFriendHolder(View itemView) {
         super(itemView);
-        //txtContent = (TextView) itemView.findViewById(R.id.textContentFriend);
-        //avata = (CircleImageView) itemView.findViewById(R.id.imageView3);
+        tvMessage = (TextView) itemView.findViewById(R.id.tvMsgFrom);
+        tvTime = (TextView) itemView.findViewById(R.id.tvTimeFrom);
     }
 }
 

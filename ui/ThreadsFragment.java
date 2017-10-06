@@ -30,27 +30,24 @@ import sushchak.bohdan.curabitur.model.Thread;
 
 public class ThreadsFragment extends Fragment{
 
+    private final String TAG = "ThreadsFragment";
+
     private OnListFragmentInteractionListener mListener;
 
     private ArrayList<Thread> listThread;
     private MyThreadsRecyclerViewAdapter adapter;
-    private final String TAG = "ThreadsFragment";
 
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
     public ThreadsFragment() {
     }
 
-    // TODO: Customize parameter initialization
+   /* // TODO: Customize parameter initialization
     @SuppressWarnings("unused")
     public static ThreadsFragment newInstance(int columnCount) {
         ThreadsFragment fragment = new ThreadsFragment();
-        Bundle args = new Bundle();
-        fragment.setArguments(args);
+        //Bundle args = new Bundle();
+        //fragment.setArguments(args);
         return fragment;
-    }
+    }*/
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -126,14 +123,15 @@ public class ThreadsFragment extends Fragment{
         void onListFragmentInteraction(Thread item);
     }
 
+
     public static class MyThreadsRecyclerViewAdapter extends RecyclerView.Adapter<MyThreadsRecyclerViewAdapter.ViewHolder> {
 
-        private final List<Thread> mValues;
+        private final List<Thread> listContact;
         private final OnListFragmentInteractionListener mListener;
         private final String TAG = "MyThreadsRecyclerViewAdapter";
 
         public MyThreadsRecyclerViewAdapter(List<Thread> items, OnListFragmentInteractionListener listener) {
-            mValues = items;
+            listContact = items;
             mListener = listener;
         }
 
@@ -146,9 +144,9 @@ public class ThreadsFragment extends Fragment{
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-            holder.mItem = mValues.get(position);
-            holder.mIdView.setText(mValues.get(position).idThread);
-            //holder.mContentView.setText(mValues.get(position).content);
+            holder.mItem = listContact.get(position);
+            holder.mIdView.setText(listContact.get(position).idThread);
+            //holder.mContentView.setText(listContact.get(position).content);
 
 
             holder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -158,25 +156,22 @@ public class ThreadsFragment extends Fragment{
                         mListener.onListFragmentInteraction(holder.mItem);
                         Log.d(TAG, holder.mItem.idThread);
                     }
-                    else Log.d(TAG, "mListener = null");
                 }
             });
         }
 
         @Override
         public int getItemCount() {
-            return mValues.size();
+            return listContact.size();
         }
 
         public class ViewHolder extends RecyclerView.ViewHolder {
-            public final View mView;
             public final TextView mIdView;
             public final TextView mContentView;
             public Thread mItem;
 
             public ViewHolder(View view) {
                 super(view);
-                mView = view;
                 mIdView = (TextView) view.findViewById(R.id.id);
                 mContentView = (TextView) view.findViewById(R.id.content);
             }
