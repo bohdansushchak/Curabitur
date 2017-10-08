@@ -4,7 +4,6 @@ package sushchak.bohdan.curabitur.data;
 import sushchak.bohdan.curabitur.model.Contact;
 
 public class StaticVar {
-    public static int REQUEST_CODE_REGISTER = 2000;
 
     public static Contact currentUser;
 

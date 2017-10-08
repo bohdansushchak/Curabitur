@@ -9,10 +9,11 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -37,21 +38,20 @@ public class ChatActivity extends AppCompatActivity {
     public final static int VIEW_TYPE_YOU_MESSAGE = 0;
     public final static int VIEW_TYPE_FROM_MESSAGE = 1;
 
-    //private String currentUser = FirebaseAuth.getInstance().getCurrentUser().getUid();
-
     private final String TAG = "ChatActivity";
     private RecyclerView rvChat;
     private String idChat;
 
     private Contact contact;
 
-    private ImageButton btnSend;
     private EditText etMessage;
 
     private ArrayList<Message> messages;
 
     private ListMessageAdapter adapter;
     private LinearLayoutManager linearManager;
+
+    //private FirebaseUser mUser;
 
 
     @Override
@@ -61,6 +61,8 @@ public class ChatActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbarChatActivity);
         setSupportActionBar(toolbar);
+
+        //mUser = FirebaseAuth.getInstance().getCurrentUser();
 
         contact = new Contact();
         Intent intent = getIntent();
@@ -73,7 +75,6 @@ public class ChatActivity extends AppCompatActivity {
 
         messages = new ArrayList<>();
 
-        btnSend = (ImageButton) findViewById(R.id.btnSend);
         etMessage = (EditText) findViewById(R.id.etMessage);
         rvChat = (RecyclerView) findViewById(R.id.rvChat);
 
@@ -124,7 +125,7 @@ public class ChatActivity extends AppCompatActivity {
     private void createNewChat(){
         Thread thread = new Thread();
 
-        thread.thread_id = FirebaseDatabase.getInstance().getReference().child("users/" + StaticVar.currentUser.contactId + "/threads").push().getKey();
+        thread.thread_id = FirebaseDatabase.getInstance().getReference().child("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/threads").push().getKey();
 
         thread.title_name = contact.name;
         FirebaseDatabase.getInstance().getReference().child("users/" + StaticVar.currentUser.contactId + "/threads").push().setValue(thread);
@@ -141,19 +142,50 @@ public class ChatActivity extends AppCompatActivity {
         idChat = thread.thread_id;
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.chat_activity_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.chat_menu_search:{
+
+                break;
+            }
+            case R.id.chat_menu_clear_history:{
+
+                break;
+            }
+            case R.id.chat_menu_delete_chat:{
+
+                break;
+            }
+            case R.id.chat_menu_mute_notifications:{
+
+                break;
+            }
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
     public void onClickSend(View view){
         String content = etMessage.getText().toString().trim();
         if(content.length() > 0){
             etMessage.setText("");
             Message newMessage = new Message();
             newMessage.text = content;
-            //TODO: change it
             newMessage.idSender = StaticVar.currentUser.contactId;
             newMessage.timestamp = System.currentTimeMillis();
             FirebaseDatabase.getInstance().getReference().child("threads/" + idChat + "/messages").push().setValue(newMessage);
         }
     }
 }
+
+
 
 
     class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{

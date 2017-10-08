@@ -16,6 +16,10 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -49,12 +53,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Fragment threadsFragment;
     private Fragment contactsFragment;
 
+    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
 
@@ -68,7 +74,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
 
     }
 
@@ -91,7 +96,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         StaticVar.currentUser.name =  mapContactData.get("name").toString();
                                         StaticVar.currentUser.email = mapContactData.get("email").toString();
                                         StaticVar.currentUser.avatar = mapContactData.get("avatar").toString();
-
                                     }
                                 }
                                 @Override
@@ -114,6 +118,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         };
     }
 
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
+    }
+
+
 
     @Override
     protected void onStart() {
@@ -135,6 +146,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         switch (item.getItemId()) {
             case R.id.nav_friends:{
 
+                toolbar.setNavigationIcon(R.drawable.ic_menu_send);
+                toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        threadsFragment = new ThreadsFragment();
+                        fragmentTransaction = getSupportFragmentManager().beginTransaction();
+                        fragmentTransaction.detach(contactsFragment);
+                        fragmentTransaction.add(R.id.frameLayout, threadsFragment);
+                        fragmentTransaction.commit();
+                    }
+                });
+
+                toolbar.setTitle(getResources().getString(R.string.nav_friends));
                 contactsFragment = new ContactsFragment();
                 fragmentTransaction = getSupportFragmentManager().beginTransaction();
                 fragmentTransaction.detach(threadsFragment);
@@ -149,7 +173,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
         }
-
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -171,5 +194,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         intent.putExtra(StaticVar.STR_EXTRA_CONTACT_ID, item.contactId);
         intent.putExtra(StaticVar.STR_EXTRA_CONTACT_NAME, item.name);
         startActivity(intent);
+
     }
 }
