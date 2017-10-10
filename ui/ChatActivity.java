@@ -125,21 +125,21 @@ public class ChatActivity extends AppCompatActivity {
     private void createNewChat(){
         Thread thread = new Thread();
 
-        thread.thread_id = FirebaseDatabase.getInstance().getReference().child("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/threads").push().getKey();
+        thread.setThread_id(FirebaseDatabase.getInstance().getReference().child("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/threads").push().getKey());
 
-        thread.title_name = contact.name;
+        thread.setTitle_name(contact.name);
         FirebaseDatabase.getInstance().getReference().child("users/" + StaticVar.currentUser.contactId + "/threads").push().setValue(thread);
 
         HashMap<String, Object> details = new HashMap<>();
         details.put("creation_date", System.currentTimeMillis());
         details.put("creator_id", StaticVar.currentUser.contactId);
 
-        FirebaseDatabase.getInstance().getReference().child("threads/" + thread.thread_id + "/details").setValue(details);
+        FirebaseDatabase.getInstance().getReference().child("threads/" + thread.getThread_id() + "/details").setValue(details);
 
-        thread.title_name = StaticVar.currentUser.name;
+        thread.setTitle_name(StaticVar.currentUser.name);
         FirebaseDatabase.getInstance().getReference().child("users/" + contact.contactId + "/threads").push().setValue(thread);
 
-        idChat = thread.thread_id;
+        idChat = thread.getThread_id();
     }
 
     @Override

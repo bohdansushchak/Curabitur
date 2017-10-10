@@ -7,7 +7,6 @@ import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
@@ -15,7 +14,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -32,63 +30,55 @@ import com.google.firebase.database.ValueEventListener;
 import com.yarolegovich.lovelydialog.LovelyInfoDialog;
 import com.yarolegovich.lovelydialog.LovelyProgressDialog;
 
-import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import sushchak.bohdan.curabitur.MainActivity;
 import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.data.StaticVar;
 import sushchak.bohdan.curabitur.model.User;
 
-public class LoginActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
+public class LoginActivity extends AppCompatActivity implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener {
 
     private static String TAG = "LoginActivity";
     private final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
-    private static final int REQUEST_CODE_SING_GOOGLE = 1999;
-    private static final int REQUEST_CODE_REGISTER = 2000;
+    private static final int REQUEST_CODE_SING_GOOGLE = 555;
 
-    private TextInputEditText editTextUsername;
-    private TextInputEditText editTextPassword;
-
-    private LovelyProgressDialog waitingDialog;
+    @BindView(R.id.etUserName) TextInputEditText editTextUsername;
+    @BindView(R.id.etPassword) TextInputEditText editTextPassword;
 
     private GoogleApiClient mGoogleApiClient;
-    private FirebaseAuth mAuth;
-    private FirebaseUser user;
 
-    private AuthUtils authUtils;
+    private AuthLoginUtils authLoginUtils;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        ButterKnife.bind(LoginActivity.this);
 
-        editTextUsername = (TextInputEditText) findViewById(R.id.etUserName);
-        editTextPassword = (TextInputEditText) findViewById(R.id.etPassword);
-
-        findViewById(R.id.sing_in_button).setOnClickListener(this);
-        findViewById(R.id.btnLogin).setOnClickListener(this);
-        findViewById(R.id.tvRegister).setOnClickListener(this);
-
-        authUtils = new AuthUtils();
-        waitingDialog = new LovelyProgressDialog(this).setCancelable(false);
         initFireBase();
     }
 
     private void initFireBase() {
-        mAuth = FirebaseAuth.getInstance();
+
+        authLoginUtils = new AuthLoginUtils();
+
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this, this)
+        mGoogleApiClient = new GoogleApiClient.Builder(LoginActivity.this)
+                .enableAutoManage(LoginActivity.this, LoginActivity.this)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
+
     }
 
     @Override
@@ -104,22 +94,17 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_CODE_REGISTER && resultCode == RESULT_OK) {
-            String email = data.getStringExtra(StaticVar.STR_EXTRA_USERNAME);
-            String password = data.getStringExtra(StaticVar.STR_EXTRA_PASSWORD);
-            authUtils.createUser(email, password);
-        }
         if(requestCode == REQUEST_CODE_SING_GOOGLE && resultCode == RESULT_OK){
-            waitingDialog.setIcon(android.R.drawable.btn_radio)
+           /* waitingDialog.setIcon(android.R.drawable.btn_radio)
                     .setTitle("Login....")
                     .setTopColorRes(R.color.colorPrimary)
-                    .show();
+                    .show();*/
+
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             Log.d(TAG, result.getStatus().toString());
             if (result.isSuccess()) {
                 GoogleSignInAccount account = result.getSignInAccount();
-                fireBaseAuthWithGoogle(account);
+                authLoginUtils.fireBaseAuthWithGoogle(account);
             } else {
                 // Google Sign In failed, update UI appropriately
                 // ...
@@ -127,62 +112,13 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
             }
         }
     }
-    private void fireBaseAuthWithGoogle(GoogleSignInAccount acct) {
-        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
-        mAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            Log.d(TAG, "signInWithCredential:success");
-                            user = mAuth.getCurrentUser();
-
-                            FirebaseDatabase.getInstance().getReference().child("users/" + user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    if(!dataSnapshot.exists()){
-                                        authUtils.initNewUserInfo(user.getDisplayName());
-                                        //authUtils.saveUserInfo();
-                                    }else {
-                                        authUtils.saveUserInfo();
-                                    }
-                                }
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-
-                                }
-                            });
-
-                            authUtils.saveUserInfo(); //TODO переробити
-
-                            waitingDialog.dismiss();
-                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                            LoginActivity.this.finish();
-
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "signInWithCredential:failure", task.getException());
-                            Toast.makeText(LoginActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
-                            //updateUI(null);
-                        }
-
-                        // ...
-                    }
-                });
-    }
 
     private boolean validate(String emailStr, String password) {
         Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(emailStr);
         return (password.length() > 0 || password.equals(";")) && matcher.find();
     }
 
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d(TAG, "onConnectionFailed");
-    }
-
-    @Override
+    @OnClick({R.id.sing_in_button, R.id.btnLogin, R.id.tvRegister})
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.sing_in_button:{
@@ -194,156 +130,139 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                 String username = editTextUsername.getText().toString();
                 String password = editTextPassword.getText().toString();
                 if (validate(username, password)) {
-                    authUtils.singIn(username, password);
+                    authLoginUtils.singIn(username, password);
                 } else {
                     Toast.makeText(this, "Invalid email or empty password", Toast.LENGTH_SHORT).show();
                 }
                 break;
             }
             case R.id.tvRegister:{
-                startActivityForResult(new Intent(this, RegisterActivity.class), REQUEST_CODE_REGISTER);
+                LoginActivity.this.finish();
+                startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
                 break;
             }
         }
     }
 
-   private class AuthUtils {
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
-        void singIn(String email, String password) {
+    }
+
+    private class AuthLoginUtils {
+
+        private FirebaseAuth mAuth;
+
+        private FirebaseUser user;
+
+        private LovelyProgressDialog waitingDialog;
+
+        AuthLoginUtils(){
+            mAuth = FirebaseAuth.getInstance();
+            waitingDialog = new LovelyProgressDialog(LoginActivity.this).setCancelable(false);
+        }
+
+        public void singIn(String email, String password) {
             waitingDialog.setIcon(android.R.drawable.btn_radio)
                     .setTitle("Login....")
                     .setTopColorRes(R.color.colorPrimary)
                     .show();
-            mAuth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
-                            Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
-                            waitingDialog.dismiss();
-                            if (task.isSuccessful()) {
-                                saveUserInfo();
-                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                LoginActivity.this.finish();
-                            } else {
-                                Log.w(TAG, "signInWithEmail:failed", task.getException());
-                                new LovelyInfoDialog(LoginActivity.this) {
+
+            mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                @Override
+                public void onComplete(@NonNull Task<AuthResult> task) {
+                    waitingDialog.dismiss();
+                    if (task.isSuccessful()) {
+                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+
+                    } else {
+                        Log.w(TAG, "signInWithEmail:failed", task.getException());
+                        new LovelyInfoDialog(LoginActivity.this) {
+                            @Override
+                            public LovelyInfoDialog setConfirmButtonText(String text) {
+                                findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm).setOnClickListener(new View.OnClickListener() {
                                     @Override
-                                    public LovelyInfoDialog setConfirmButtonText(String text) {
-                                        findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm).setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View view) {
-                                                dismiss();
-                                            }
-                                        });
-                                        return super.setConfirmButtonText(text);
+                                    public void onClick(View view) {
+                                        dismiss();
                                     }
-                                }
-                                        .setTopColorRes(R.color.colorAccent)
-                                        .setIcon(android.R.drawable.btn_radio)
-                                        .setTitle("Login false")
-                                        .setMessage("Email not exist or wrong password!")
-                                        .setCancelable(false)
-                                        .setConfirmButtonText("Ok")
-                                        .show();
+                                });
+                                return super.setConfirmButtonText(text);
                             }
                         }
-                    })
+                                .setTopColorRes(R.color.colorAccent)
+                                .setIcon(android.R.drawable.btn_radio)
+                                .setTitle("Login false")
+                                .setMessage("Email not exist or wrong password!")
+                                .setCancelable(false)
+                                .setConfirmButtonText("Ok")
+                                .show();
+                    }
+                }
+            })
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            waitingDialog.dismiss();
+                            // waitingDialog.dismiss();
                         }
                     });
         }
 
-        void createUser(String email, String password) {
-
-            waitingDialog.setIcon(android.R.drawable.btn_radio)
-                    .setTitle("Registering....")
-                    .setTopColorRes(R.color.colorPrimary)
-                    .show();
-            mAuth.createUserWithEmailAndPassword(email, password)
+        public void fireBaseAuthWithGoogle(GoogleSignInAccount acct) {
+            AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+            mAuth.signInWithCredential(credential)
                     .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
-                            Log.d(TAG, "createUserWithEmail:onComplete:" + task.isSuccessful());
-                            waitingDialog.dismiss();
                             if (task.isSuccessful()) {
-                                initNewUserInfo(null);
-                                Toast.makeText(LoginActivity.this, "Register and Login success", Toast.LENGTH_SHORT).show();
+                                Log.d(TAG, "signInWithCredential:success");
+                                user = mAuth.getCurrentUser();
+
+                                FirebaseDatabase.getInstance().getReference().child("users/" + user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        if(!dataSnapshot.exists()){
+                                            initNewUserInfo(user);
+                                            //authUtils.saveUserInfo();
+                                        }else {
+                                            //authUtils.saveUserInfo();
+                                        }
+                                    }
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+
+                                    }
+                                });
+
+                                waitingDialog.dismiss();
                                 startActivity(new Intent(LoginActivity.this, MainActivity.class));
                                 LoginActivity.this.finish();
+
                             } else {
-                                new LovelyInfoDialog(LoginActivity.this) {
-                                    @Override
-                                    public LovelyInfoDialog setConfirmButtonText(String text) {
-                                        findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm).setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View view) {
-                                                dismiss();
-                                            }
-                                        });
-                                        return super.setConfirmButtonText(text);
-                                    }
-                                }
-                                        .setTopColorRes(R.color.colorAccent)
-                                        .setIcon(android.R.drawable.btn_radio)
-                                        .setTitle("Register false")
-                                        .setMessage("Email exist or weak password!")
-                                        .setConfirmButtonText("ok")
-                                        .setCancelable(false)
-                                        .show();
-
+                                // If sign in fails, display a message to the user.
+                                Log.w(TAG, "signInWithCredential:failure", task.getException());
+                                Toast.makeText(LoginActivity.this, "Authentication failed.",
+                                        Toast.LENGTH_SHORT).show();
+                                //updateUI(null);
                             }
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            waitingDialog.dismiss();
+
+                            // ...
                         }
                     });
         }
 
-        void saveUserInfo() {
-            FirebaseDatabase
-                    .getInstance()
-                    .getReference()
-                    .child("users/" + mAuth.getCurrentUser().getUid())
-                    .addListenerForSingleValueEvent(new ValueEventListener() {
-
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            //waitingDialog.dismiss();
-                            HashMap hashUser = (HashMap) dataSnapshot.getValue();
-                            User userInfo = new User();
-                                userInfo.name = (String) hashUser.get("name");
-                                userInfo.email = (String) hashUser.get("email");
-                                userInfo.avatar = (String) hashUser.get("avatar");
-                            //SharedPreferenceHelper.getInstance(LoginActivity.this).saveUserInfo(userInfo);
-
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
-
-        }
-
-        void initNewUserInfo(String userName) {
+        private void initNewUserInfo(FirebaseUser user) {
             User newUser = new User();
-            newUser.email = user.getEmail();
-            if(userName == null) {
-                newUser.name = user.getEmail().substring(0, user.getEmail().indexOf("@"));
-            } else {
-                newUser.name = userName;
+            newUser.setEmail(user.getEmail());
+            if(user.getDisplayName() != null){
+                newUser.setName(user.getDisplayName());
+            }else {
+                newUser.setName(user.getEmail().substring(0, user.getEmail().indexOf("@")));
             }
-            newUser.avatar = StaticVar.STR_DEFAULT_BASE64;
+            newUser.setAvatar(StaticVar.STR_DEFAULT_BASE64); //TODO image
             FirebaseDatabase.getInstance().getReference().child("users/" + user.getUid()).setValue(newUser);
         }
+
     }
-
-
 }
+
+

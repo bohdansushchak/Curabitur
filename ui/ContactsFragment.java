@@ -20,6 +20,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import de.hdodenhof.circleimageview.CircleImageView;
 import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.model.Contact;
@@ -52,8 +54,6 @@ public class ContactsFragment extends Fragment {
         listContact = new ArrayList<>();
         getListContactFromPhone();
     }
-
-
 
     private void getListContactFromPhone() {
         mapPhoneContacts = new HashMap<>();
@@ -172,7 +172,7 @@ public class ContactsFragment extends Fragment {
         public void onBindViewHolder(final ViewHolder holder, int position) {
             holder.mItem = listContact.get(position);
             holder.tvContactName.setText(listContact.get(position).name);
-            //TODO: set avatar for contact
+
 
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -189,15 +189,20 @@ public class ContactsFragment extends Fragment {
             return listContact.size();
         }
 
-        public class ViewHolder extends RecyclerView.ViewHolder {
-            public final TextView tvContactName;
-            public final CircleImageView civAvatar;
-            public Contact mItem;
+        static class ViewHolder extends RecyclerView.ViewHolder {
+            @BindView(R.id.tvContactName)
+            TextView tvContactName;
 
-            public ViewHolder(View view) {
+            @BindView(R.id.civAvatar)
+            CircleImageView civAvatar;
+
+            Contact mItem;
+
+            ViewHolder(View view) {
                 super(view);
-                tvContactName = (TextView) view.findViewById(R.id.tvContactName);
-                civAvatar = (CircleImageView) view.findViewById(R.id.civAvatar);
+                ButterKnife.bind(this, view);
+                //tvContactName = (TextView) view.findViewById(R.id.tvContactName);
+                //civAvatar = (CircleImageView) view.findViewById(R.id.civAvatar);
             }
         }
     }
