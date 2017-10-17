@@ -2,10 +2,8 @@ package sushchak.bohdan.curabitur;
 
 
 
-import android.app.Activity;
+
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -24,15 +22,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.HashMap;
 
 import butterknife.BindView;
@@ -45,11 +39,14 @@ import sushchak.bohdan.curabitur.model.User;
 import sushchak.bohdan.curabitur.ui.ChatActivity;
 import sushchak.bohdan.curabitur.ui.ContactsFragment;
 import sushchak.bohdan.curabitur.ui.LoginActivity;
+import sushchak.bohdan.curabitur.ui.SettingsActivity;
+import sushchak.bohdan.curabitur.ui.SettingsListFragment;
 import sushchak.bohdan.curabitur.ui.ThreadsFragment;
 
+
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
-        ThreadsFragment.OnListFragmentInteractionListener,
-        ContactsFragment.OnListFragmentInteractionListener
+        ThreadsFragment.ThreadFragmentInteractionListener,
+        ContactsFragment.ContactsFragmentInteractionListener
 {
     private static String TAG = "MainActivity";
 
@@ -87,8 +84,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
 
         View header = navigationView.getHeaderView(0);
-        civUserAvatar = (CircleImageView) header.findViewById(R.id.civUserAvatar);
-        tvEmailUser = (TextView) header.findViewById(R.id.tvEmailUser);
+        this.civUserAvatar = (CircleImageView) header.findViewById(R.id.civUserAvatar);
+        this.tvEmailUser = (TextView) header.findViewById(R.id.tvEmailUser);
         tvUserName = (TextView) header.findViewById(R.id.tvUserName);
         backgroundUserLayout = (LinearLayout) header.findViewById(R.id.backgroundUserLayout);
 
@@ -124,6 +121,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                                 }
                             });
+
                     threadsFragment = new ThreadsFragment();
                     fragmentTransaction = getSupportFragmentManager().beginTransaction();
                     fragmentTransaction.add(R.id.frameLayout, threadsFragment);
@@ -136,7 +134,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         };
     }
-
 
 
     @Override
@@ -200,6 +197,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             }*/
 
+            case R.id.nav_setting:{
+                startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+                break;
+            }
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -232,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void onListFragmentInteraction(Thread item) {
+    public void threadFragmentInteractionClick(Thread item) {
         Log.d(TAG, item.getThread_id());
         Intent intent = new Intent(MainActivity.this, ChatActivity.class);
         intent.putExtra(StaticVar.STR_EXTRA_CHAT_ID, item.getThread_id());
@@ -240,7 +241,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void onListFragmentInteraction(Contact item) {
+    public void contactsFragmentInteractionClick(Contact item) {
         Intent intent = new Intent(MainActivity.this, ChatActivity.class);
         intent.putExtra(StaticVar.STR_EXTRA_CONTACT_ID, item.contactId);
         intent.putExtra(StaticVar.STR_EXTRA_CONTACT_NAME, item.name);

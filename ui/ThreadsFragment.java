@@ -26,6 +26,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import de.hdodenhof.circleimageview.CircleImageView;
 import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.model.Thread;
 
@@ -35,7 +36,7 @@ public class ThreadsFragment extends Fragment {
 
     private final String TAG = "ThreadsFragment";
 
-    private OnListFragmentInteractionListener mListener;
+    private ThreadFragmentInteractionListener mListener;
 
     private ArrayList<Thread> listThread;
     private MyThreadsRecyclerViewAdapter adapter;
@@ -98,11 +99,11 @@ public class ThreadsFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-            if (activity instanceof OnListFragmentInteractionListener) {
-                mListener = (OnListFragmentInteractionListener) activity;
+            if (activity instanceof ThreadFragmentInteractionListener) {
+                mListener = (ThreadFragmentInteractionListener) activity;
             } else {
                 throw new RuntimeException(activity.toString()
-                        + " must implement OnListFragmentInteractionListener");
+                        + " must implement ThreadFragmentInteractionListener");
             }
     }
 
@@ -112,19 +113,19 @@ public class ThreadsFragment extends Fragment {
         mListener = null;
     }
 
-    public interface OnListFragmentInteractionListener {
-        void onListFragmentInteraction(Thread item);
+    public interface ThreadFragmentInteractionListener {
+        void threadFragmentInteractionClick(Thread item);
     }
 
 
     public static class MyThreadsRecyclerViewAdapter extends RecyclerView.Adapter<MyThreadsRecyclerViewAdapter.ViewHolder> {
 
-        private final List<Thread> listContact;
-        private final OnListFragmentInteractionListener mListener;
+        private final List<Thread> threadList;
+        private final ThreadFragmentInteractionListener mListener;
         private final String TAG = "MyThreadsRecyclerViewAdapter";
 
-        public MyThreadsRecyclerViewAdapter(List<Thread> items, OnListFragmentInteractionListener listener) {
-            listContact = items;
+        public MyThreadsRecyclerViewAdapter(List<Thread> items, ThreadFragmentInteractionListener listener) {
+            threadList = items;
             mListener = listener;
         }
 
@@ -137,15 +138,15 @@ public class ThreadsFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-            final Thread thread = listContact.get(position);
-            holder.mIdView.setText(listContact.get(position).getTitle_name());
-            //holder.mContentView.setText(listContact.get(position).content);
+            final Thread thread = threadList.get(position);
+            holder.mIdView.setText(threadList.get(position).getTitle_name());
+            //holder.mContentView.setText(threadList.get(position).content);
 
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (null != mListener) {
-                        mListener.onListFragmentInteraction(thread);
+                        mListener.threadFragmentInteractionClick(thread);
                         Log.d(TAG, thread.getThread_id());
                     }
                 }
@@ -155,11 +156,17 @@ public class ThreadsFragment extends Fragment {
 
         @Override
         public int getItemCount() {
-            return listContact.size();
+            return threadList.size();
         }
 
 
         public class ViewHolder extends RecyclerView.ViewHolder{
+           /* @BindView(R.id.civChatAvatar) CircleImageView civChatAvatar;
+            @BindView(R.id.tvChatName) TextView tcChatName;
+            @BindView(R.id.tvLastMessage) TextView tvLastMessage;
+            @BindView(R.id.tvTimeLastMessage) TextView tvTimeLastMessage;
+            @BindView(R.id.tvCountMessages) TextView tvCountMessages;
+*/
             @BindView(R.id.id) TextView mIdView;
             @BindView(R.id.content) TextView mContentView;
             //public Thread mItem;
@@ -167,8 +174,6 @@ public class ThreadsFragment extends Fragment {
             public ViewHolder(View view) {
                 super(view);
                 ButterKnife.bind(this, view);
-                //mIdView = (TextView) view.findViewById(R.id.id);
-                //mContentView = (TextView) view.findViewById(R.id.content);
             }
 
             @Override

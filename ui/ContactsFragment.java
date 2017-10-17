@@ -36,7 +36,7 @@ public class ContactsFragment extends Fragment {
 
     private final String TAG = "ContactsFragment";
 
-    private OnListFragmentInteractionListener mListener;
+    private ContactsFragmentInteractionListener mListener;
 
     private ArrayList<Contact> listContact;
     private MyContactsRecyclerViewAdapter adapter;
@@ -132,12 +132,12 @@ public class ContactsFragment extends Fragment {
     @Override
     public void onAttach(Activity context) {
         super.onAttach(context);
-            if (context instanceof OnListFragmentInteractionListener) {
+            if (context instanceof ContactsFragmentInteractionListener) {
                 this.context = context;
-                mListener = (OnListFragmentInteractionListener) context;
+                mListener = (ContactsFragmentInteractionListener) context;
             } else {
                 throw new RuntimeException(context.toString()
-                        + " must implement OnListFragmentInteractionListener");
+                        + " must implement ThreadFragmentInteractionListener");
             }
     }
 
@@ -147,16 +147,16 @@ public class ContactsFragment extends Fragment {
         mListener = null;
     }
 
-    public interface OnListFragmentInteractionListener {
-        void onListFragmentInteraction(Contact item);
+    public interface ContactsFragmentInteractionListener {
+        void contactsFragmentInteractionClick(Contact item);
     }
 
     public static class MyContactsRecyclerViewAdapter extends RecyclerView.Adapter<MyContactsRecyclerViewAdapter.ViewHolder> {
 
         private final List<Contact> listContact;
-        private final OnListFragmentInteractionListener mListener;
+        private final ContactsFragmentInteractionListener mListener;
 
-        public MyContactsRecyclerViewAdapter(List<Contact> items, OnListFragmentInteractionListener listener) {
+        public MyContactsRecyclerViewAdapter(List<Contact> items, ContactsFragmentInteractionListener listener) {
             listContact = items;
             mListener = listener;
         }
@@ -178,7 +178,7 @@ public class ContactsFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     if (null != mListener) {
-                        mListener.onListFragmentInteraction(holder.mItem);
+                        mListener.contactsFragmentInteractionClick(holder.mItem);
                     }
                 }
             });
@@ -190,19 +190,14 @@ public class ContactsFragment extends Fragment {
         }
 
         static class ViewHolder extends RecyclerView.ViewHolder {
-            @BindView(R.id.tvContactName)
-            TextView tvContactName;
-
-            @BindView(R.id.civAvatar)
-            CircleImageView civAvatar;
+            @BindView(R.id.tvContactName) TextView tvContactName;
+            @BindView(R.id.civAvatar) CircleImageView civAvatar;
 
             Contact mItem;
 
             ViewHolder(View view) {
                 super(view);
                 ButterKnife.bind(this, view);
-                //tvContactName = (TextView) view.findViewById(R.id.tvContactName);
-                //civAvatar = (CircleImageView) view.findViewById(R.id.civAvatar);
             }
         }
     }

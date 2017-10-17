@@ -94,6 +94,7 @@ public class ChatActivity extends AppCompatActivity {
                     message.text = (String) mapMessage.get("text");
                     message.timestamp = (Long) mapMessage.get("timestamp");
                     messages.add(message);
+
                     Log.d(TAG, message.toString());
                     adapter.notifyDataSetChanged();
                     linearManager.scrollToPosition(messages.size() - 1);
@@ -213,11 +214,14 @@ public class ChatActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             if(holder instanceof ItemMessageUserHolder){
+
                 ((ItemMessageUserHolder) holder).tvMessage.setText(messages.get(position).text);
                 DateFormat df = new SimpleDateFormat("HH:mm:ss");
                 String time = df.format(messages.get(position).timestamp);
                 ((ItemMessageUserHolder) holder).tvTime.setText(time);
+
             } else if(holder instanceof ItemMessageFriendHolder){
+
                 ((ItemMessageFriendHolder) holder).tvMessage.setText(messages.get(position).text);
                 DateFormat df = new SimpleDateFormat("HH:mm:ss");
                 String time = df.format(messages.get(position).timestamp);
