@@ -90,8 +90,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         backgroundUserLayout = (LinearLayout) header.findViewById(R.id.backgroundUserLayout);
 
         initFireBase();
-
-
     }
 
     private void initFireBase(){
@@ -189,13 +187,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mAuth.signOut();
                 break;
             }
-            /*case R.id.nav_share:{
-                Intent intent = new Intent();
-                intent.setType("image/*");
-                intent.setAction(Intent.ACTION_PICK);
-                startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1994);
+            case R.id.nav_share:{
+
                 break;
-            }*/
+            }
 
             case R.id.nav_setting:{
                 startActivity(new Intent(MainActivity.this, SettingsActivity.class));
@@ -211,25 +206,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-       /* if (requestCode == 1994 && resultCode == Activity.RESULT_OK) {
-            if (data == null) {
-                return;
-            }
-            try {
-                InputStream inputStream = getContentResolver().openInputStream(data.getData());
-                Bitmap imgBitmap = BitmapFactory.decodeStream(inputStream);
-                imgBitmap = ImageUtils.cropToSquare(imgBitmap);
-                InputStream is = ImageUtils.convertBitmapToInputStream(imgBitmap);
-                final Bitmap liteImage = ImageUtils.makeImageLite(is,
-                        imgBitmap.getWidth(), imgBitmap.getHeight(),
-                        ImageUtils.AVATAR_WIDTH, ImageUtils.AVATAR_HEIGHT);
-
-                String imageBase64 = ImageUtils.encodeBase64(liteImage);
-
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        }*/
     }
 
     @Override
