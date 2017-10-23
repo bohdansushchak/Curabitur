@@ -78,11 +78,11 @@ public class ContactsFragment extends Fragment {
             } finally {
                 cursor.close();
             }
-            checkContactInDB();
+            checkContactInFireBaseDB();
         }
     }
 
-    private void checkContactInDB(){
+    private void checkContactInFireBaseDB(){
         FirebaseDatabase.getInstance().getReference().child("users").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -164,7 +164,7 @@ public class ContactsFragment extends Fragment {
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.fragment_contacts, parent, false);
+                    .inflate(R.layout.item_list_contact, parent, false);
             return new ViewHolder(view);
         }
 

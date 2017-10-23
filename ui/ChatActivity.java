@@ -29,9 +29,11 @@ import java.util.HashMap;
 
 import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.data.StaticVar;
+import sushchak.bohdan.curabitur.data.UserDataSharedPreference;
 import sushchak.bohdan.curabitur.model.Contact;
 import sushchak.bohdan.curabitur.model.Message;
 import sushchak.bohdan.curabitur.model.Thread;
+import sushchak.bohdan.curabitur.model.User;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -51,7 +53,7 @@ public class ChatActivity extends AppCompatActivity {
     private ListMessageAdapter adapter;
     private LinearLayoutManager linearManager;
 
-    //private FirebaseUser mUser;
+    protected User mUser;
 
 
     @Override
@@ -62,7 +64,9 @@ public class ChatActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbarChatActivity);
         setSupportActionBar(toolbar);
 
-        //mUser = FirebaseAuth.getInstance().getCurrentUser();
+        mUser = UserDataSharedPreference.getInstance(ChatActivity.this).getUserData();
+
+        Log.d(TAG, mUser.toString());
 
         contact = new Contact();
         Intent intent = getIntent();
@@ -129,15 +133,15 @@ public class ChatActivity extends AppCompatActivity {
         thread.setThread_id(FirebaseDatabase.getInstance().getReference().child("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/threads").push().getKey());
 
         thread.setTitle_name(contact.name);
-        FirebaseDatabase.getInstance().getReference().child("users/" + StaticVar.currentUser.contactId + "/threads").push().setValue(thread);
+        FirebaseDatabase.getInstance().getReference().child("users/" + mUser.getUserId() + "/threads").push().setValue(thread);
 
         HashMap<String, Object> details = new HashMap<>();
         details.put("creation_date", System.currentTimeMillis());
-        details.put("creator_id", StaticVar.currentUser.contactId);
+        details.put("creator_id", mUser.getUserId());
 
         FirebaseDatabase.getInstance().getReference().child("threads/" + thread.getThread_id() + "/details").setValue(details);
 
-        thread.setTitle_name(StaticVar.currentUser.name);
+        thread.setTitle_name(mUser.getName());
         FirebaseDatabase.getInstance().getReference().child("users/" + contact.contactId + "/threads").push().setValue(thread);
 
         idChat = thread.getThread_id();
@@ -174,19 +178,19 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     public void onClickSend(View view){
+
+        Log.d(TAG, mUser.toString());
         String content = etMessage.getText().toString().trim();
         if(content.length() > 0){
             etMessage.setText("");
             Message newMessage = new Message();
             newMessage.text = content;
-            newMessage.idSender = StaticVar.currentUser.contactId;
+            newMessage.idSender = mUser.getUserId();
             newMessage.timestamp = System.currentTimeMillis();
             FirebaseDatabase.getInstance().getReference().child("threads/" + idChat + "/messages").push().setValue(newMessage);
         }
     }
 }
-
-
 
 
     class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{

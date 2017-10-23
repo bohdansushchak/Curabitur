@@ -25,6 +25,7 @@ import butterknife.OnClick;
 import sushchak.bohdan.curabitur.MainActivity;
 import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.data.StaticVar;
+import sushchak.bohdan.curabitur.data.UserDataSharedPreference;
 import sushchak.bohdan.curabitur.model.User;
 
 public class RegisterActivity extends AppCompatActivity {
@@ -141,9 +142,10 @@ public class RegisterActivity extends AppCompatActivity {
             User newUser = new User();
             newUser.setEmail(email);
             newUser.setName(email.substring(0, email.indexOf("@")));
-            newUser.setAvatar(StaticVar.STR_DEFAULT_BASE64);
+            newUser.setAvatar(StaticVar.STR_DEFAULT_AVATAR);
             newUser.setPhone("none");
             FirebaseDatabase.getInstance().getReference().child("users/" + userId).setValue(newUser);
+
         }
 
 

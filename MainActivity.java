@@ -33,6 +33,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.hdodenhof.circleimageview.CircleImageView;
 import sushchak.bohdan.curabitur.data.StaticVar;
+import sushchak.bohdan.curabitur.data.UserDataSharedPreference;
 import sushchak.bohdan.curabitur.model.Contact;
 import sushchak.bohdan.curabitur.model.Thread;
 import sushchak.bohdan.curabitur.model.User;
@@ -94,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void initFireBase(){
         mAuth = FirebaseAuth.getInstance();
+
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
@@ -111,7 +113,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         String avatar = mapContactData.get("avatar").toString();
                                         String phone = mapContactData.get("phone").toString();
 
-                                        currentUser = new User(userId, name, email, avatar, "online", phone);
+                                        currentUser = new User(userId, name, email, avatar, phone);
+
+                                        UserDataSharedPreference.getInstance(MainActivity.this).saveUserData(currentUser);
+                                        getCurrentUser();
                                     }
                                 }
                                 @Override
@@ -133,6 +138,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         };
     }
 
+    private void getCurrentUser(){
+
+        currentUser = UserDataSharedPreference.getInstance(MainActivity.this).getUserData();
+
+        Log.d(TAG, currentUser.toString());
+
+        tvEmailUser.setText(currentUser.getEmail());
+        tvUserName.setText(currentUser.getName());
+        if (currentUser.getAvatar().equals(StaticVar.STR_DEFAULT_AVATAR))
+            civUserAvatar.setImageResource(R.drawable.user_avatar_default);
+
+    }
 
     @Override
     public boolean onSupportNavigateUp() {
@@ -146,6 +163,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
     }
+
 
     @Override
     protected void onStop() {

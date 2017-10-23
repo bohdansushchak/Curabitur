@@ -30,8 +30,6 @@ import de.hdodenhof.circleimageview.CircleImageView;
 import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.model.Thread;
 
-
-
 public class ThreadsFragment extends Fragment {
 
     private final String TAG = "ThreadsFragment";
@@ -132,14 +130,14 @@ public class ThreadsFragment extends Fragment {
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.fragment_threads, parent, false);
+                    .inflate(R.layout.item_list_chat, parent, false);
             return new ViewHolder(view);
         }
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             final Thread thread = threadList.get(position);
-            holder.mIdView.setText(threadList.get(position).getTitle_name());
+            holder.tvChatName.setText(threadList.get(position).getTitle_name());
             //holder.mContentView.setText(threadList.get(position).content);
 
             holder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -161,26 +159,16 @@ public class ThreadsFragment extends Fragment {
 
 
         public class ViewHolder extends RecyclerView.ViewHolder{
-           /* @BindView(R.id.civChatAvatar) CircleImageView civChatAvatar;
-            @BindView(R.id.tvChatName) TextView tcChatName;
+            @BindView(R.id.civChatAvatar) CircleImageView civChatAvatar;
+            @BindView(R.id.tvChatName) TextView tvChatName;
             @BindView(R.id.tvLastMessage) TextView tvLastMessage;
             @BindView(R.id.tvTimeLastMessage) TextView tvTimeLastMessage;
             @BindView(R.id.tvCountMessages) TextView tvCountMessages;
-*/
-            @BindView(R.id.id) TextView mIdView;
-            @BindView(R.id.content) TextView mContentView;
-            //public Thread mItem;
 
             public ViewHolder(View view) {
                 super(view);
                 ButterKnife.bind(this, view);
             }
-
-            @Override
-            public String toString() {
-                return super.toString() + " '" + mContentView.getText() + "'";
-            }
-
 
         }
     }

@@ -11,17 +11,22 @@ import android.view.View;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.PrintStream;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import de.hdodenhof.circleimageview.CircleImageView;
 import sushchak.bohdan.curabitur.R;
+import sushchak.bohdan.curabitur.data.UserDataSharedPreference;
+import sushchak.bohdan.curabitur.model.User;
 import sushchak.bohdan.curabitur.utils.ImageUtils;
 
 public class SettingsActivity extends AppCompatActivity {
 
     private static final int REQUEST_PICK_IMAGE = 33;
+
+    private User user;
 
     @BindView(R.id.circle_image_view) CircleImageView civAvatar;
 
@@ -42,6 +47,8 @@ public class SettingsActivity extends AppCompatActivity {
         fragmentTransaction = getFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.frameLayout, fragment);
         fragmentTransaction.commit();
+
+        user = UserDataSharedPreference.getInstance(SettingsActivity.this).getUserData();
     }
 
 

@@ -30,6 +30,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.yarolegovich.lovelydialog.LovelyInfoDialog;
 import com.yarolegovich.lovelydialog.LovelyProgressDialog;
 
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,9 +40,12 @@ import butterknife.OnClick;
 import sushchak.bohdan.curabitur.MainActivity;
 import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.data.StaticVar;
+import sushchak.bohdan.curabitur.data.UserDataSharedPreference;
 import sushchak.bohdan.curabitur.model.User;
 
-public class LoginActivity extends AppCompatActivity implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener {
+public class LoginActivity extends AppCompatActivity implements
+        View.OnClickListener,
+        GoogleApiClient.OnConnectionFailedListener {
 
     private static String TAG = "LoginActivity";
     private final Pattern VALID_EMAIL_ADDRESS_REGEX =
@@ -153,7 +157,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         private FirebaseAuth mAuth;
 
-        private FirebaseUser user;
+        private FirebaseUser firebaseUseruser;
 
         private LovelyProgressDialog waitingDialog;
 
@@ -168,11 +172,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     .setTopColorRes(R.color.colorPrimary)
                     .show();
 
-            mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+            mAuth.signInWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     waitingDialog.dismiss();
                     if (task.isSuccessful()) {
+                        //saveUserData();
                         startActivity(new Intent(LoginActivity.this, MainActivity.class));
 
                     } else {
@@ -180,7 +186,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         new LovelyInfoDialog(LoginActivity.this) {
                             @Override
                             public LovelyInfoDialog setConfirmButtonText(String text) {
-                                findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm).setOnClickListener(new View.OnClickListener() {
+                                findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm)
+                                        .setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
                                         dismiss();
@@ -208,6 +215,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         }
 
         public void fireBaseAuthWithGoogle(GoogleSignInAccount acct) {
+            waitingDialog.setIcon(android.R.drawable.btn_radio)
+                    .setTitle("Login....")
+                    .setTopColorRes(R.color.colorPrimary)
+                    .show();
+
             AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
             mAuth.signInWithCredential(credential)
                     .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
@@ -215,17 +227,15 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
                                 Log.d(TAG, "signInWithCredential:success");
-                                user = mAuth.getCurrentUser();
+                                firebaseUseruser = mAuth.getCurrentUser();
 
-                                FirebaseDatabase.getInstance().getReference().child("users/" + user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                                FirebaseDatabase.getInstance().getReference().child("users/" + firebaseUseruser.getUid())
+                                        .addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(DataSnapshot dataSnapshot) {
-                                        if(!dataSnapshot.exists()){
-                                            initNewUserInfo(user);
-                                            //authUtils.saveUserInfo();
-                                        }else {
-                                            //authUtils.saveUserInfo();
-                                        }
+                                        if(!dataSnapshot.exists())
+                                            initNewUserInfo(firebaseUseruser);
+                                        //else saveUserData();
                                     }
                                     @Override
                                     public void onCancelled(DatabaseError databaseError) {
@@ -242,7 +252,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                                 Log.w(TAG, "signInWithCredential:failure", task.getException());
                                 Toast.makeText(LoginActivity.this, "Authentication failed.",
                                         Toast.LENGTH_SHORT).show();
-                                //updateUI(null);
+
                             }
 
                             // ...
@@ -258,9 +268,40 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             }else {
                 newUser.setName(user.getEmail().substring(0, user.getEmail().indexOf("@")));
             }
-            newUser.setAvatar(StaticVar.STR_DEFAULT_BASE64); //TODO image
+            newUser.setAvatar(StaticVar.STR_DEFAULT_AVATAR); //TODO image
+            newUser.setPhone("none");
             FirebaseDatabase.getInstance().getReference().child("users/" + user.getUid()).setValue(newUser);
+
+            UserDataSharedPreference.getInstance(LoginActivity.this).saveUserData(newUser);
         }
+
+       /* private void saveUserData(){
+            FirebaseDatabase.getInstance().getReference().child("users/" + mAuth.getCurrentUser().getUid())
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if(dataSnapshot.exists()){
+                        HashMap mapContactData = (HashMap) dataSnapshot.getValue();
+                        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                        String name = mapContactData.get("name").toString();
+                        String email = mapContactData.get("email").toString();
+                        String avatar = mapContactData.get("avatar").toString();
+                        String phone = mapContactData.get("phone").toString();
+
+                        User user = new User(userId, name, email, avatar, phone);
+
+                        UserDataSharedPreference.getInstance(LoginActivity.this).saveUserData(user);
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+        }
+
+*/
 
     }
 }

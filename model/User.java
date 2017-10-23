@@ -6,18 +6,16 @@ public class User {
     private String name;
     private String email;
     private String avatar;
-    private String status;
     private String phone;
 
     public User() {
     }
 
-    public User(String userId, String name, String email, String avatar, String status, String phone) {
+    public User(String userId, String name, String email, String avatar, String phone) {
         this.userId = userId;
         this.name = name;
         this.email = email;
         this.avatar = avatar;
-        this.status = status;
         this.phone = phone;
     }
 
@@ -53,19 +51,22 @@ public class User {
         this.avatar = avatar;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public String getPhone() {
         return phone;
     }
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "userId='" + userId + '\'' +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", avatar='" + avatar + '\'' +
+                ", phone='" + phone + '\'' +
+                '}';
     }
 }
