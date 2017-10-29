@@ -3,6 +3,7 @@ package sushchak.bohdan.curabitur;
 
 
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -21,6 +22,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.cocosw.bottomsheet.BottomSheet;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -41,7 +43,6 @@ import sushchak.bohdan.curabitur.ui.ChatActivity;
 import sushchak.bohdan.curabitur.ui.ContactsFragment;
 import sushchak.bohdan.curabitur.ui.LoginActivity;
 import sushchak.bohdan.curabitur.ui.SettingsActivity;
-import sushchak.bohdan.curabitur.ui.SettingsListFragment;
 import sushchak.bohdan.curabitur.ui.ThreadsFragment;
 
 
@@ -82,21 +83,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawerLayout.setDrawerListener(toggle);
         toggle.syncState();
 
-        navigationView.setNavigationItemSelectedListener(this);
+        this.navigationView.setNavigationItemSelectedListener(this);
 
         View header = navigationView.getHeaderView(0);
-        this.civUserAvatar = (CircleImageView) header.findViewById(R.id.civUserAvatar);
-        this.tvEmailUser = (TextView) header.findViewById(R.id.tvEmailUser);
-        tvUserName = (TextView) header.findViewById(R.id.tvUserName);
-        backgroundUserLayout = (LinearLayout) header.findViewById(R.id.backgroundUserLayout);
+        this.civUserAvatar = (CircleImageView) header.findViewById(R.id.civUserAvatar_navHeader);
+        this.tvEmailUser = (TextView) header.findViewById(R.id.tvEmailUser_navHeader);
+        this.tvUserName = (TextView) header.findViewById(R.id.tvUserName_navHeader);
+        this.backgroundUserLayout = (LinearLayout) header.findViewById(R.id.backgroundUserLayout);
 
         initFireBase();
     }
 
     private void initFireBase(){
-        mAuth = FirebaseAuth.getInstance();
+        this.mAuth = FirebaseAuth.getInstance();
 
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
+        this.mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 if(firebaseAuth.getCurrentUser() != null){
@@ -113,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         String avatar = mapContactData.get("avatar").toString();
                                         String phone = mapContactData.get("phone").toString();
 
-                                        currentUser = new User(userId, name, email, avatar, phone);
+                                        MainActivity.this.currentUser = new User(userId, name, email, avatar, phone);
 
                                         UserDataSharedPreference.getInstance(MainActivity.this).saveUserData(currentUser);
                                         getCurrentUser();
@@ -140,12 +141,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void getCurrentUser(){
 
-        currentUser = UserDataSharedPreference.getInstance(MainActivity.this).getUserData();
+        //this.currentUser = UserDataSharedPreference.getInstance(MainActivity.this).getUserData();
 
         Log.d(TAG, currentUser.toString());
 
-        tvEmailUser.setText(currentUser.getEmail());
-        tvUserName.setText(currentUser.getName());
+        this.tvEmailUser.setText(currentUser.getEmail());
+        this.tvUserName.setText(currentUser.getName());
         if (currentUser.getAvatar().equals(StaticVar.STR_DEFAULT_AVATAR))
             civUserAvatar.setImageResource(R.drawable.user_avatar_default);
 
@@ -227,12 +228,42 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void threadFragmentInteractionClick(Thread item) {
-        Log.d(TAG, item.getThread_id());
-        Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-        intent.putExtra(StaticVar.STR_EXTRA_CHAT_ID, item.getThread_id());
-        startActivity(intent);
+    public void threadFragmentInteractionClick(Thread item, int clickType) {
+        switch (clickType){
+            case ThreadsFragment.ThreadFragmentInteractionListener.CLICK:
+            {
+                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                intent.putExtra(StaticVar.STR_EXTRA_CHAT_ID, item.getThread_id());
+                startActivity(intent);
+                break;
+            }
+            case ThreadsFragment.ThreadFragmentInteractionListener.LONG_CLICK:
+            {
+                new BottomSheet.Builder(this).sheet(R.menu.main_sheet_chat).listener(new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which){
+                            case R.id.sheet_pin_to_top:
+                            {
+                                break;
+                            }
+                            case R.id.sheet_clear_history:
+                            {
+                                break;
+                            }
+                            case R.id.sheet_delete:
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }).show();
+                break;
+            }
+        }
     }
+
+
 
     @Override
     public void contactsFragmentInteractionClick(Contact item) {

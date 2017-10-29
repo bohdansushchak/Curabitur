@@ -2,9 +2,12 @@ package sushchak.bohdan.curabitur.ui;
 
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.os.Bundle;
 
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NotificationCompat;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,6 +16,8 @@ import android.view.ViewGroup;
 
 import android.widget.TextView;
 
+import com.cocosw.bottomsheet.BottomSheet;
+import com.google.firebase.FirebaseApiNotAvailableException;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -27,6 +32,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.hdodenhof.circleimageview.CircleImageView;
+import sushchak.bohdan.curabitur.MainActivity;
 import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.model.Thread;
 
@@ -112,9 +118,11 @@ public class ThreadsFragment extends Fragment {
     }
 
     public interface ThreadFragmentInteractionListener {
-        void threadFragmentInteractionClick(Thread item);
-    }
+        int CLICK = 1;
+        int LONG_CLICK = 2;
 
+        void threadFragmentInteractionClick(Thread item, int clickType);
+    }
 
     public static class MyThreadsRecyclerViewAdapter extends RecyclerView.Adapter<MyThreadsRecyclerViewAdapter.ViewHolder> {
 
@@ -143,10 +151,21 @@ public class ThreadsFragment extends Fragment {
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (null != mListener) {
-                        mListener.threadFragmentInteractionClick(thread);
+                    if (mListener != null) {
+                        mListener.threadFragmentInteractionClick(thread, ThreadFragmentInteractionListener.CLICK);
                         Log.d(TAG, thread.getThread_id());
                     }
+                }
+            });
+
+            holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    if(mListener != null){
+                        mListener.threadFragmentInteractionClick(thread, ThreadFragmentInteractionListener.LONG_CLICK);
+                        return true;
+                    }
+                    return false;
                 }
             });
 

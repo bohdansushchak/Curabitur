@@ -8,16 +8,17 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.TextView;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.io.PrintStream;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import de.hdodenhof.circleimageview.CircleImageView;
 import sushchak.bohdan.curabitur.R;
+import sushchak.bohdan.curabitur.data.StaticVar;
 import sushchak.bohdan.curabitur.data.UserDataSharedPreference;
 import sushchak.bohdan.curabitur.model.User;
 import sushchak.bohdan.curabitur.utils.ImageUtils;
@@ -29,6 +30,8 @@ public class SettingsActivity extends AppCompatActivity {
     private User user;
 
     @BindView(R.id.circle_image_view) CircleImageView civAvatar;
+    @BindView(R.id.tvTitleUserName) TextView tvUserName;
+    @BindView(R.id.tvUserStatus) TextView tvUserStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +51,17 @@ public class SettingsActivity extends AppCompatActivity {
         fragmentTransaction.replace(R.id.frameLayout, fragment);
         fragmentTransaction.commit();
 
+        setUserData();
+    }
+
+    private void setUserData(){
         user = UserDataSharedPreference.getInstance(SettingsActivity.this).getUserData();
+
+        if(user.getAvatar().equals(StaticVar.STR_DEFAULT_AVATAR))
+            civAvatar.setImageResource(R.drawable.user_avatar_default);
+
+        tvUserName.setText(user.getName());
+        tvUserStatus.setText("online");
     }
 
 
@@ -80,7 +93,7 @@ public class SettingsActivity extends AppCompatActivity {
                     InputStream inputStream = getContentResolver().openInputStream(data.getData());
                     Bitmap imgBitmap = ImageUtils.cropToSquare(BitmapFactory.decodeStream(inputStream));
 
-                    civAvatar.setImageBitmap(imgBitmap);
+                    //civAvatar.setImageBitmap(imgBitmap);
 
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();

@@ -25,7 +25,6 @@ import butterknife.OnClick;
 import sushchak.bohdan.curabitur.MainActivity;
 import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.data.StaticVar;
-import sushchak.bohdan.curabitur.data.UserDataSharedPreference;
 import sushchak.bohdan.curabitur.model.User;
 
 public class RegisterActivity extends AppCompatActivity {
@@ -34,7 +33,7 @@ public class RegisterActivity extends AppCompatActivity {
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
     @BindView(R.id.etEmail) TextInputEditText etUserEmail;
-    @BindView(R.id.etPassword) TextInputEditText etPassword;
+    @BindView(R.id.etPassword_Login) TextInputEditText etPassword;
     @BindView(R.id.etRePassword) TextInputEditText etRepeatPassword;
 
     private AuthRegisterUtils authRegisterUtils;

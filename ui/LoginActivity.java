@@ -30,7 +30,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.yarolegovich.lovelydialog.LovelyInfoDialog;
 import com.yarolegovich.lovelydialog.LovelyProgressDialog;
 
-import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,8 +52,8 @@ public class LoginActivity extends AppCompatActivity implements
 
     private static final int REQUEST_CODE_SING_GOOGLE = 555;
 
-    @BindView(R.id.etUserName) TextInputEditText editTextUsername;
-    @BindView(R.id.etPassword) TextInputEditText editTextPassword;
+    @BindView(R.id.etEmail_Login) TextInputEditText editTextUsername;
+    @BindView(R.id.etPassword_Login) TextInputEditText editTextPassword;
 
     private GoogleApiClient mGoogleApiClient;
 
@@ -122,7 +121,7 @@ public class LoginActivity extends AppCompatActivity implements
         return (password.length() > 0 || password.equals(";")) && matcher.find();
     }
 
-    @OnClick({R.id.sing_in_button, R.id.btnLogin, R.id.tvRegister})
+    @OnClick({R.id.sing_in_button, R.id.btnLogin, R.id.tvRegister_Login})
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.sing_in_button:{
@@ -140,7 +139,7 @@ public class LoginActivity extends AppCompatActivity implements
                 }
                 break;
             }
-            case R.id.tvRegister:{
+            case R.id.tvRegister_Login:{
                 LoginActivity.this.finish();
                 startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
                 break;
