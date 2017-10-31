@@ -4,13 +4,26 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.view.View;
+import android.widget.ImageView;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.FirebaseStorage;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.data.StaticVar;
+import sushchak.bohdan.curabitur.data.UserDataSharedPreference;
+import sushchak.bohdan.curabitur.model.User;
 
 public class ImageUtils {
 
@@ -50,6 +63,36 @@ public class ImageUtils {
 
         return imageUri[0];
     }*/
+
+    public static void setUserAvatar(WeakReference<CircleImageView> referenceToView, User user, final int resourceDefault) {
+        final CircleImageView imageView = (CircleImageView) referenceToView.get();
+
+        String avatarPath = "users" + File.separator + user.getUserId() + File.separator + user.getAvatar();
+        try {
+            final File localFile = File.createTempFile("avatar", "jpeg");
+            FirebaseStorage.getInstance()
+                    .getReference()
+                    .child(avatarPath)
+                    .getFile(localFile)
+                    .addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                            File file = localFile;
+                            Uri image = Uri.fromFile(file);
+
+                            imageView.setImageURI(image);
+
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                        imageView.setImageResource(resourceDefault);
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static String saveImage(Context context, Uri imageUri, String imageName) throws IOException{
 

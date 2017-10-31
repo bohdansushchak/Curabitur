@@ -25,6 +25,7 @@ import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.UUID;
 
 import butterknife.BindView;
@@ -75,10 +76,8 @@ public class SettingsActivity extends AppCompatActivity {
     private void setUserData(){
         user = UserDataSharedPreference.getInstance(SettingsActivity.this).getUserData();
 
-        if(user.getAvatar().equals(StaticVar.STR_DEFAULT_AVATAR))
-            civAvatar.setImageResource(R.drawable.user_avatar_default);
-        else
-
+        WeakReference<CircleImageView> reference = new WeakReference<CircleImageView>(civAvatar);
+        ImageUtils.setUserAvatar(reference, user, R.drawable.user_avatar_default);
 
         tvUserName.setText(user.getName());
         tvUserStatus.setText("online");
@@ -88,9 +87,7 @@ public class SettingsActivity extends AppCompatActivity {
     @OnClick(R.id.fabPickImage)
     public void pickImage(View view){
 
-        //Crop.pickImage(this);
         //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show();
-
 
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -119,14 +116,6 @@ public class SettingsActivity extends AppCompatActivity {
 
             uploadImage(resultUri, avatarKey);
 
-            try {
-                String phonePathAvatar = ImageUtils.saveImage(SettingsActivity.this, resultUri, avatarKey);
-                UserDataSharedPreference.getInstance(SettingsActivity.this).savePhonePathAvatar(phonePathAvatar);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
         }
     }
 
@@ -137,7 +126,7 @@ public class SettingsActivity extends AppCompatActivity {
                 .start(this);
     }
 
-    private void uploadImage(final Uri imageUri, String avatarKey) {
+    private void uploadImage(final Uri imageUri, final String avatarKey) {
 
         FirebaseStorage
                 .getInstance()
@@ -147,19 +136,25 @@ public class SettingsActivity extends AppCompatActivity {
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                //downloadImage();
                 String oldAvatarPath = "users" + File.separator + user.getUserId() + File.separator + user.getAvatar();
                 deleteAvatarFromFireBase(oldAvatarPath);
-                avatarUri = imageUri;
 
-                civAvatar.setImageURI(avatarUri);
+                civAvatar.setImageURI(imageUri);
+
+                FirebaseDatabase.getInstance().getReference().child("users/" + user.getUserId() + "/avatar").setValue(avatarKey);
+
+                user.setAvatar(avatarKey);
+                UserDataSharedPreference.getInstance(SettingsActivity.this).saveUserData(user);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                //TODO:
+                Toast.makeText(SettingsActivity.this, "Failed to upload", Toast.LENGTH_LONG).show();
             }
         });
 
-        FirebaseDatabase.getInstance().getReference().child("users/" + user.getUserId() + "/avatar").setValue(avatarKey);
 
-        user.setAvatar(avatarKey);
-        UserDataSharedPreference.getInstance(SettingsActivity.this).saveUserData(user);
     }
 
     private void deleteAvatarFromFireBase(String avatarPath){
@@ -172,47 +167,6 @@ public class SettingsActivity extends AppCompatActivity {
         ImageUtils.deleteImage(avatarKey);
     }
 
-    private void downloadImage(){
-        try {
-            final File localFile = File.createTempFile("avatar", "jpeg");
-
-            String avatarPath = "users" + File.separator + user.getUserId() + File.separator + user.getAvatar();
-
-            FirebaseStorage.getInstance()
-                    .getReference()
-                    .child(avatarPath)
-                    .getFile(localFile)
-                    .addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                            File file = localFile;
-                            Uri image = Uri.fromFile(file);
-
-                            civAvatar.setImageURI(image);
-
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-
-                }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        /* FirebaseStorage
-                 .getInstance()
-                 .getReference()
-                 .child("users" + user.getUserId() + "/avatar")
-                 .getDownloadUrl()
-                 .addOnSuccessListener(new OnSuccessListener<Uri>() {
-             @Override
-             public void onSuccess(Uri uri) {
-                Log.d(TAG, "url : " + uri.toString());
-             }
-         });*/
-    }
 
     @Override
     protected void onStop() {

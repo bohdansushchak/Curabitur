@@ -31,6 +31,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
 import butterknife.BindView;
@@ -150,18 +151,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         this.tvEmailUser.setText(currentUser.getEmail());
         this.tvUserName.setText(currentUser.getName());
-        if (currentUser.getAvatar().equals(StaticVar.STR_DEFAULT_AVATAR)) {
-            civUserAvatar.setImageResource(R.drawable.user_avatar_default);
-        }else {
-            String pathAvatar = UserDataSharedPreference.getInstance(MainActivity.this).getPhonePathAvatar();
-            File file = new File(pathAvatar);
-            if(file.exists()){
-                Uri imageUri = Uri.fromFile(file);
-                civUserAvatar.setImageURI(imageUri);
-            }else {
-                civUserAvatar.setImageResource(R.drawable.user_avatar_default);
-            }
-        }
+
+        WeakReference<CircleImageView> reference = new WeakReference<CircleImageView>(civUserAvatar);
+        ImageUtils.setUserAvatar(reference, currentUser, R.drawable.user_avatar_default);
+
     }
 
     @Override
@@ -176,8 +169,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
     }
-
-
+    
     @Override
     protected void onStop() {
         super.onStop();
