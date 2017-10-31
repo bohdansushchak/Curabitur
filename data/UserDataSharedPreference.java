@@ -16,6 +16,8 @@ public class UserDataSharedPreference {
     private static final String SHARE_KEY_EMAIL = "email";
     private static final String SHARE_KEY_AVATAR = "avatar";
     private static final String SHARE_KEY_PHONE = "phone";
+    private static final String SHARE_KEY_PHONE_AVATAR = "phonePathAvatar";
+
 
     private UserDataSharedPreference() {
     }
@@ -48,6 +50,17 @@ public class UserDataSharedPreference {
         editor.putString(SHARE_KEY_AVATAR, user.getAvatar());
         editor.putString(SHARE_KEY_PHONE, user.getPhone());
         editor.apply();
+    }
+
+    public void savePhonePathAvatar(String path){
+        editor = preference.edit();
+        editor.putString(SHARE_KEY_PHONE_AVATAR, path);
+        editor.apply();
+    }
+
+    public String getPhonePathAvatar(){
+        String path = preference.getString(SHARE_KEY_PHONE_AVATAR, "none");
+        return path;
     }
 
     public User getUserData(){

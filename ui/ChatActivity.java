@@ -27,6 +27,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.data.StaticVar;
 import sushchak.bohdan.curabitur.data.UserDataSharedPreference;
@@ -41,12 +43,12 @@ public class ChatActivity extends AppCompatActivity {
     public final static int VIEW_TYPE_FROM_MESSAGE = 1;
 
     private final String TAG = "ChatActivity";
-    private RecyclerView rvChat;
+    @BindView(R.id.rvChat) RecyclerView rvChat;
     private String idChat;
 
     private Contact contact;
 
-    private EditText etMessage;
+    @BindView(R.id.etMessage) EditText etMessage;
 
     private ArrayList<Message> messages;
 
@@ -60,6 +62,7 @@ public class ChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        ButterKnife.bind(this);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbarChatActivity);
         setSupportActionBar(toolbar);
@@ -79,9 +82,8 @@ public class ChatActivity extends AppCompatActivity {
 
         messages = new ArrayList<>();
 
-        etMessage = (EditText) findViewById(R.id.etMessage);
-        rvChat = (RecyclerView) findViewById(R.id.rvChat);
-
+        //etMessage = (EditText) findViewById(R.id.etMessage);
+        //rvChat = (RecyclerView) findViewById(R.id.rvChat);
 
         adapter = new ListMessageAdapter(ChatActivity.this, messages);
         linearManager = new LinearLayoutManager(ChatActivity.this, LinearLayoutManager.VERTICAL, false);

@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.UploadTask;
@@ -24,6 +25,7 @@ import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -42,6 +44,8 @@ public class SettingsActivity extends AppCompatActivity {
     private static final int REQUEST_PICK_IMAGE = 33;
 
     private User user;
+
+    private Uri avatarUri;
 
     @BindView(R.id.circle_image_view) CircleImageView civAvatar;
     @BindView(R.id.tvTitleUserName) TextView tvUserName;
@@ -73,6 +77,8 @@ public class SettingsActivity extends AppCompatActivity {
 
         if(user.getAvatar().equals(StaticVar.STR_DEFAULT_AVATAR))
             civAvatar.setImageResource(R.drawable.user_avatar_default);
+        else
+
 
         tvUserName.setText(user.getName());
         tvUserStatus.setText("online");
@@ -84,6 +90,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         //Crop.pickImage(this);
         //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+
 
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -108,7 +115,18 @@ public class SettingsActivity extends AppCompatActivity {
 
         if (requestCode == UCrop.REQUEST_CROP && resultCode == RESULT_OK) {
             final Uri resultUri = UCrop.getOutput(data);
-            uploadImage(resultUri);
+            String avatarKey = UUID.randomUUID().toString();
+
+            uploadImage(resultUri, avatarKey);
+
+            try {
+                String phonePathAvatar = ImageUtils.saveImage(SettingsActivity.this, resultUri, avatarKey);
+                UserDataSharedPreference.getInstance(SettingsActivity.this).savePhonePathAvatar(phonePathAvatar);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
@@ -119,31 +137,50 @@ public class SettingsActivity extends AppCompatActivity {
                 .start(this);
     }
 
-    private void uploadImage(final Uri imageUri) {
-
-        ImageUtils.saveImage(this, imageUri);
+    private void uploadImage(final Uri imageUri, String avatarKey) {
 
         FirebaseStorage
                 .getInstance()
                 .getReference()
-                .child("users" + user.getUserId() + "/avatar")
+                .child("users" + File.separator + user.getUserId() + File.separator + avatarKey)
                 .putFile(imageUri)
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Toast.makeText(SettingsActivity.this, "Success", Toast.LENGTH_SHORT).show();
-                downloadImage();
+                //downloadImage();
+                String oldAvatarPath = "users" + File.separator + user.getUserId() + File.separator + user.getAvatar();
+                deleteAvatarFromFireBase(oldAvatarPath);
+                avatarUri = imageUri;
+
+                civAvatar.setImageURI(avatarUri);
             }
         });
+
+        FirebaseDatabase.getInstance().getReference().child("users/" + user.getUserId() + "/avatar").setValue(avatarKey);
+
+        user.setAvatar(avatarKey);
+        UserDataSharedPreference.getInstance(SettingsActivity.this).saveUserData(user);
+    }
+
+    private void deleteAvatarFromFireBase(String avatarPath){
+        FirebaseStorage.getInstance().getReference().child(avatarPath).delete();
+    }
+
+    private void deleteAvatar(){
+        String avatarKey = user.getAvatar();
+        FirebaseDatabase.getInstance().getReference().child("users" + File.separator + user.getUserId() + "/avatar").setValue(StaticVar.STR_DEFAULT_AVATAR);
+        ImageUtils.deleteImage(avatarKey);
     }
 
     private void downloadImage(){
         try {
             final File localFile = File.createTempFile("avatar", "jpeg");
 
+            String avatarPath = "users" + File.separator + user.getUserId() + File.separator + user.getAvatar();
+
             FirebaseStorage.getInstance()
                     .getReference()
-                    .child("users" + user.getUserId() + "/avatar")
+                    .child(avatarPath)
                     .getFile(localFile)
                     .addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
                         @Override
@@ -164,7 +201,7 @@ public class SettingsActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-         FirebaseStorage
+        /* FirebaseStorage
                  .getInstance()
                  .getReference()
                  .child("users" + user.getUserId() + "/avatar")
@@ -174,10 +211,12 @@ public class SettingsActivity extends AppCompatActivity {
              public void onSuccess(Uri uri) {
                 Log.d(TAG, "url : " + uri.toString());
              }
-         });
+         });*/
     }
 
-
-    
-
+    @Override
+    protected void onStop() {
+        super.onStop();
+        setResult(RESULT_OK);
+    }
 }

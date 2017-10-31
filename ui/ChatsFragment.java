@@ -36,16 +36,16 @@ import sushchak.bohdan.curabitur.MainActivity;
 import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.model.Thread;
 
-public class ThreadsFragment extends Fragment {
+public class ChatsFragment extends Fragment {
 
-    private final String TAG = "ThreadsFragment";
+    private final String TAG = "ChatsFragment";
 
     private ThreadFragmentInteractionListener mListener;
 
     private ArrayList<Thread> listThread;
     private MyThreadsRecyclerViewAdapter adapter;
 
-    public ThreadsFragment() {
+    public ChatsFragment() {
     }
 
     @Override

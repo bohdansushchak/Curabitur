@@ -5,6 +5,7 @@ package sushchak.bohdan.curabitur;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -29,6 +30,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.File;
 import java.util.HashMap;
 
 import butterknife.BindView;
@@ -40,17 +42,20 @@ import sushchak.bohdan.curabitur.model.Contact;
 import sushchak.bohdan.curabitur.model.Thread;
 import sushchak.bohdan.curabitur.model.User;
 import sushchak.bohdan.curabitur.ui.ChatActivity;
+import sushchak.bohdan.curabitur.ui.ChatsFragment;
 import sushchak.bohdan.curabitur.ui.ContactsFragment;
 import sushchak.bohdan.curabitur.ui.LoginActivity;
 import sushchak.bohdan.curabitur.ui.SettingsActivity;
-import sushchak.bohdan.curabitur.ui.ThreadsFragment;
+import sushchak.bohdan.curabitur.utils.ImageUtils;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
-        ThreadsFragment.ThreadFragmentInteractionListener,
+        ChatsFragment.ThreadFragmentInteractionListener,
         ContactsFragment.ContactsFragmentInteractionListener
 {
     private static String TAG = "MainActivity";
+
+    private final int REQUEST_SETTINGS_CHANGE_DATA = 33;
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
@@ -117,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         MainActivity.this.currentUser = new User(userId, name, email, avatar, phone);
 
                                         UserDataSharedPreference.getInstance(MainActivity.this).saveUserData(currentUser);
-                                        getCurrentUser();
+                                        setUserData();
                                     }
                                 }
                                 @Override
@@ -126,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 }
                             });
 
-                    threadsFragment = new ThreadsFragment();
+                    threadsFragment = new ChatsFragment();
                     fragmentTransaction = getSupportFragmentManager().beginTransaction();
                     fragmentTransaction.add(R.id.frameLayout, threadsFragment);
                     fragmentTransaction.commit();
@@ -139,17 +144,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         };
     }
 
-    private void getCurrentUser(){
-
-        //this.currentUser = UserDataSharedPreference.getInstance(MainActivity.this).getUserData();
+    private void setUserData(){
 
         Log.d(TAG, currentUser.toString());
 
         this.tvEmailUser.setText(currentUser.getEmail());
         this.tvUserName.setText(currentUser.getName());
-        if (currentUser.getAvatar().equals(StaticVar.STR_DEFAULT_AVATAR))
+        if (currentUser.getAvatar().equals(StaticVar.STR_DEFAULT_AVATAR)) {
             civUserAvatar.setImageResource(R.drawable.user_avatar_default);
-
+        }else {
+            String pathAvatar = UserDataSharedPreference.getInstance(MainActivity.this).getPhonePathAvatar();
+            File file = new File(pathAvatar);
+            if(file.exists()){
+                Uri imageUri = Uri.fromFile(file);
+                civUserAvatar.setImageURI(imageUri);
+            }else {
+                civUserAvatar.setImageResource(R.drawable.user_avatar_default);
+            }
+        }
     }
 
     @Override
@@ -185,7 +197,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 toolbar.setNavigationOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        threadsFragment = new ThreadsFragment();
+                        threadsFragment = new ChatsFragment();
                         fragmentTransaction = getSupportFragmentManager().beginTransaction();
                         fragmentTransaction.detach(contactsFragment);
                         fragmentTransaction.add(R.id.frameLayout, threadsFragment);
@@ -212,7 +224,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
             case R.id.nav_setting:{
-                startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivityForResult(intent, REQUEST_SETTINGS_CHANGE_DATA);
                 break;
             }
         }
@@ -225,19 +238,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode == REQUEST_SETTINGS_CHANGE_DATA && resultCode == RESULT_OK){
+            currentUser = UserDataSharedPreference.getInstance(MainActivity.this).getUserData();
+            setUserData();
+        }
     }
 
     @Override
     public void threadFragmentInteractionClick(Thread item, int clickType) {
         switch (clickType){
-            case ThreadsFragment.ThreadFragmentInteractionListener.CLICK:
+            case ChatsFragment.ThreadFragmentInteractionListener.CLICK:
             {
                 Intent intent = new Intent(MainActivity.this, ChatActivity.class);
                 intent.putExtra(StaticVar.STR_EXTRA_CHAT_ID, item.getThread_id());
                 startActivity(intent);
                 break;
             }
-            case ThreadsFragment.ThreadFragmentInteractionListener.LONG_CLICK:
+            case ChatsFragment.ThreadFragmentInteractionListener.LONG_CLICK:
             {
                 new BottomSheet.Builder(this).sheet(R.menu.main_sheet_chat).listener(new DialogInterface.OnClickListener() {
                     @Override
