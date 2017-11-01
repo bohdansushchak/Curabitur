@@ -40,7 +40,7 @@ import sushchak.bohdan.curabitur.model.User;
 
 public class ChatsFragment extends Fragment {
 
-    private final String TAG = "ChatsFragment";
+    public static final String TAG = "ChatsFragment";
 
     private ThreadFragmentInteractionListener mListener;
 
@@ -229,6 +229,8 @@ public class ChatsFragment extends Fragment {
                     .load(thread.getAvatarUrl())
                     .into(holder.civChatAvatar)
                     .onLoadFailed(mFragment.getResources().getDrawable(R.drawable.user_avatar_default));*/
+
+            holder.civChatAvatar.setImageResource(R.drawable.user_avatar_default);
 
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override

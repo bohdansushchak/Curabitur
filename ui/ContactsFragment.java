@@ -34,7 +34,7 @@ import java.util.List;
 
 public class ContactsFragment extends Fragment {
 
-    private final String TAG = "ContactsFragment";
+    public static final String TAG = "ContactsFragment";
 
     private ContactsFragmentInteractionListener mListener;
 
