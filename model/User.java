@@ -2,6 +2,8 @@ package sushchak.bohdan.curabitur.model;
 
 
 public class User {
+    public static final String KEY_USERS = "users";
+
     private String userId;
     private String name;
     private String email;

@@ -1,8 +1,5 @@
 package sushchak.bohdan.curabitur;
 
-
-
-
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -21,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.cocosw.bottomsheet.BottomSheet;
 import com.google.firebase.auth.FirebaseAuth;
@@ -44,6 +42,7 @@ import sushchak.bohdan.curabitur.ui.ChatsFragment;
 import sushchak.bohdan.curabitur.ui.ContactsFragment;
 import sushchak.bohdan.curabitur.ui.LoginActivity;
 import sushchak.bohdan.curabitur.ui.SettingsActivity;
+import sushchak.bohdan.curabitur.utils.ChatUtils;
 import sushchak.bohdan.curabitur.utils.ImageUtils;
 
 
@@ -241,7 +240,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void threadFragmentInteractionClick(ThreadData item, int clickType) {
+    public void threadFragmentInteractionClick(final ThreadData item, int clickType) {
         if (getSupportFragmentManager().getBackStackEntryCount() > 1)
             getSupportFragmentManager().popBackStack();
 
@@ -251,29 +250,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Intent intent = new Intent(MainActivity.this, ChatActivity.class);
                 intent.putExtra(StaticVar.STR_EXTRA_CHAT_ID, item.getThread_id());
                 startActivity(intent);
-                break;
-            }
-            case ChatsFragment.ThreadFragmentInteractionListener.LONG_CLICK:
-            {
-                new BottomSheet.Builder(this).sheet(R.menu.main_sheet_chat).listener(new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which){
-                            case R.id.sheet_pin_to_top:
-                            {
-                                break;
-                            }
-                            case R.id.sheet_clear_history:
-                            {
-                                break;
-                            }
-                            case R.id.sheet_delete:
-                            {
-                                break;
-                            }
-                        }
-                    }
-                }).show();
                 break;
             }
         }

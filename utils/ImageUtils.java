@@ -44,33 +44,6 @@ public class ImageUtils {
         return Uri.parse(path);
     }
 
-
-    /*
-    public static Uri getImageFromFireBase(String path) throws IOException{
-        final Uri[] imageUri = {Uri.EMPTY};
-
-        final File localFile = File.createTempFile("avatar", "jpeg");
-
-        FirebaseStorage.getInstance()
-                .getReference()
-                .child(path)
-                .getFile(localFile)
-                .addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                        File file = localFile;
-                        imageUri[0] = Uri.fromFile(file);
-
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-            }
-        });
-
-        return imageUri[0];
-    }*/
-
     public static void setUserAvatar(final WeakReference<CircleImageView> referenceToImageView,
                                      final WeakReference<TextView> referenceTextName,
                                      final User user,
@@ -112,8 +85,6 @@ public class ImageUtils {
                 tvUserName.setText(user.getName());
             else tvUserName.setText("");
         }
-
-
     }
 
     public static void setUserAvatar(final WeakReference<CircleImageView> referenceToView,

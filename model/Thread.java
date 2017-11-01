@@ -2,6 +2,9 @@ package sushchak.bohdan.curabitur.model;
 
 
 public class Thread {
+
+    public static final String KEY_THREAD = "threads";
+
     private String thread_id;
     private String title_name;
 

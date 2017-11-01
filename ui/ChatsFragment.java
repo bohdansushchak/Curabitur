@@ -2,6 +2,7 @@ package sushchak.bohdan.curabitur.ui;
 
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.os.Bundle;
 
 import android.support.v4.app.Fragment;
@@ -13,6 +14,7 @@ import android.view.ViewGroup;
 
 import android.widget.TextView;
 
+import com.cocosw.bottomsheet.BottomSheet;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -36,7 +38,7 @@ import sushchak.bohdan.curabitur.R;
 import sushchak.bohdan.curabitur.model.Message;
 import sushchak.bohdan.curabitur.model.Thread;
 import sushchak.bohdan.curabitur.model.ThreadData;
-import sushchak.bohdan.curabitur.model.User;
+import sushchak.bohdan.curabitur.utils.ChatUtils;
 import sushchak.bohdan.curabitur.utils.ImageUtils;
 
 
@@ -98,7 +100,6 @@ public class ChatsFragment extends Fragment {
                         listThread.add(thread);
                     }
                     getUserIdFromChats();
-
                 }
             }
             @Override
@@ -219,7 +220,7 @@ public class ChatsFragment extends Fragment {
         }
 
         @Override
-        public void onBindViewHolder(final ViewHolder holder, int position) {
+        public void onBindViewHolder(final ViewHolder holder, final int position) {
             final ThreadData thread = threadList.get(position);
             holder.tvChatName.setText(thread.getTitle_name());
             holder.tvLastMessage.setText(thread.getLastMessage().text);
@@ -252,14 +253,36 @@ public class ChatsFragment extends Fragment {
             holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    if(mListener != null){
-                        mListener.threadFragmentInteractionClick(thread, ThreadFragmentInteractionListener.LONG_CLICK);
-                        return true;
-                    }
-                    return false;
+                    new BottomSheet.Builder(mFragment.getActivity()).sheet(R.menu.main_sheet_chat).listener(new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which){
+                                case R.id.sheet_pin_to_top:
+                                {
+                                    break;
+                                }
+                                case R.id.sheet_clear_history:
+                                {
+                                    break;
+                                }
+                                case R.id.sheet_delete:
+                                {
+                                    ChatUtils.deleteChatInUser(thread);
+                                    threadList.remove(position);
+                                    notifyDataSetChanged();
+                                    break;
+                                }
+                            }
+
+                        }
+                    }).show();
+
+                    return true;
                 }
             });
         }
+
+
 
         @Override
         public int getItemCount() {
