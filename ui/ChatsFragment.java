@@ -2,12 +2,9 @@ package sushchak.bohdan.curabitur.ui;
 
 
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.os.Bundle;
 
 import android.support.v4.app.Fragment;
-import android.support.v4.app.NotificationCompat;
-import android.support.v7.view.ActionMode;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,14 +13,16 @@ import android.view.ViewGroup;
 
 import android.widget.TextView;
 
-import com.cocosw.bottomsheet.BottomSheet;
-import com.google.firebase.FirebaseApiNotAvailableException;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,9 +31,12 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.hdodenhof.circleimageview.CircleImageView;
-import sushchak.bohdan.curabitur.MainActivity;
 import sushchak.bohdan.curabitur.R;
+import sushchak.bohdan.curabitur.model.Message;
 import sushchak.bohdan.curabitur.model.Thread;
+import sushchak.bohdan.curabitur.model.ThreadData;
+import sushchak.bohdan.curabitur.model.User;
+
 
 public class ChatsFragment extends Fragment {
 
@@ -42,8 +44,12 @@ public class ChatsFragment extends Fragment {
 
     private ThreadFragmentInteractionListener mListener;
 
-    private ArrayList<Thread> listThread;
+    private ArrayList<ThreadData> listDataThread;
     private MyThreadsRecyclerViewAdapter adapter;
+
+    private DatabaseReference reference;
+
+    private ArrayList<Thread> listThread;
 
     public ChatsFragment() {
     }
@@ -52,8 +58,10 @@ public class ChatsFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        listDataThread = new ArrayList<>();
         listThread = new ArrayList<>();
 
+        reference = FirebaseDatabase.getInstance().getReference();
         getListThread();
     }
 
@@ -65,31 +73,31 @@ public class ChatsFragment extends Fragment {
         // Set the adapter
         if (view instanceof RecyclerView) {
             RecyclerView recyclerView = (RecyclerView) view;
-            adapter = new MyThreadsRecyclerViewAdapter(listThread, mListener);
+            adapter = new MyThreadsRecyclerViewAdapter(ChatsFragment.this, listDataThread, mListener);
             recyclerView.setAdapter(adapter);
         }
         return view;
     }
 
     private void getListThread(){
-        FirebaseDatabase.getInstance().getReference().child("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/threads").addListenerForSingleValueEvent(new ValueEventListener() {
+
+        reference.child("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/threads").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.getValue() != null){
                     HashMap mapThreads = (HashMap) dataSnapshot.getValue();
                     Iterator iterator = mapThreads.keySet().iterator();
                     while (iterator.hasNext()){
-                        HashMap threadData = (HashMap) mapThreads.get(iterator.next());
-                        String idThread =  threadData.get("thread_id").toString();
-                        String threadName = threadData.get("title_name").toString();
+                        HashMap mapThread = (HashMap) mapThreads.get(iterator.next());
+                        String idThread =  mapThread.get("thread_id").toString();
+                        String threadName = mapThread.get("title_name").toString();
                         Thread thread = new Thread();
                         thread.setThread_id(idThread);
                         thread.setTitle_name(threadName);
                         listThread.add(thread);
-                        Log.d(TAG, idThread);
                     }
-                    Log.d(TAG, mapThreads.toString());
-                    adapter.notifyDataSetChanged();
+                    getUserIdFromChats();
+
                 }
             }
             @Override
@@ -97,6 +105,68 @@ public class ChatsFragment extends Fragment {
 
             }
         });
+
+    }
+
+    private void getUserIdFromChats(){
+
+        for (final Thread thread : listThread){
+            reference.child("threads/" + thread.getThread_id() + "/user").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.getValue() != null) {
+                        HashMap mapUsers = (HashMap) dataSnapshot.getValue();
+                        Iterator iterator = mapUsers.keySet().iterator();
+                        final ThreadData threadData = new ThreadData(thread);
+                        while (iterator.hasNext()) {
+                            HashMap map = (HashMap) mapUsers.get(iterator.next());
+                            String userId = (String) map.get("user_id");
+                            String userAvatar = (String) map.get("user_avatar");
+
+                            User user = new User();
+                            user.setUserId(userId);
+                            user.setAvatar(userAvatar);
+
+                            threadData.listUserId.add(user);
+
+                        }
+                        reference.child("threads/" + thread.getThread_id() + "/details").addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                if(dataSnapshot.getValue() != null){
+                                    HashMap mapDetails = (HashMap) dataSnapshot.getValue();
+                                    String textLastMessage = (String) mapDetails.get("textLastMessage");
+                                    long timeLastMessage = (Long) mapDetails.get("timeLastMessage");
+
+                                    Message lastMessage = new Message();
+                                    lastMessage.text = textLastMessage;
+                                    lastMessage.timestamp = timeLastMessage;
+
+                                    threadData.setLastMessage(lastMessage);
+
+                                    Log.d(TAG, "ThreadData: " + threadData.toString());
+                                    listDataThread.add(threadData);
+                                    adapter.notifyDataSetChanged();
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+
+
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+        }
+
     }
 
     @SuppressWarnings("deprecation")
@@ -121,18 +191,21 @@ public class ChatsFragment extends Fragment {
         int CLICK = 1;
         int LONG_CLICK = 2;
 
-        void threadFragmentInteractionClick(Thread item, int clickType);
+        void threadFragmentInteractionClick(ThreadData item, int clickType);
     }
 
     public static class MyThreadsRecyclerViewAdapter extends RecyclerView.Adapter<MyThreadsRecyclerViewAdapter.ViewHolder> {
 
-        private final List<Thread> threadList;
+        private final List<ThreadData> threadList;
         private final ThreadFragmentInteractionListener mListener;
         private final String TAG = "MyThreadsRecyclerViewAdapter";
+        private Fragment mFragment;
 
-        public MyThreadsRecyclerViewAdapter(List<Thread> items, ThreadFragmentInteractionListener listener) {
-            threadList = items;
-            mListener = listener;
+        public MyThreadsRecyclerViewAdapter(Fragment fragment, List<ThreadData> items, ThreadFragmentInteractionListener listener) {
+            this.mFragment = fragment;
+            this.threadList = items;
+            this.mListener = listener;
+
         }
 
         @Override
@@ -144,9 +217,18 @@ public class ChatsFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-            final Thread thread = threadList.get(position);
-            holder.tvChatName.setText(threadList.get(position).getTitle_name());
-            //holder.mContentView.setText(threadList.get(position).content);
+            final ThreadData thread = threadList.get(position);
+            holder.tvChatName.setText(thread.getTitle_name());
+            holder.tvLastMessage.setText(thread.getLastMessage().text);
+
+            DateFormat df = new SimpleDateFormat("HH:mm:ss");
+            String time = df.format(thread.getLastMessage().timestamp);
+            holder.tvTimeLastMessage.setText(time);
+
+            /*Glide.with(mFragment)
+                    .load(thread.getAvatarUrl())
+                    .into(holder.civChatAvatar)
+                    .onLoadFailed(mFragment.getResources().getDrawable(R.drawable.user_avatar_default));*/
 
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -168,7 +250,6 @@ public class ChatsFragment extends Fragment {
                     return false;
                 }
             });
-
         }
 
         @Override

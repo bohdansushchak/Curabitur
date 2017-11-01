@@ -24,7 +24,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.hdodenhof.circleimageview.CircleImageView;
 import sushchak.bohdan.curabitur.R;
-import sushchak.bohdan.curabitur.model.Contact;
+import sushchak.bohdan.curabitur.model.User;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,11 +38,10 @@ public class ContactsFragment extends Fragment {
 
     private ContactsFragmentInteractionListener mListener;
 
-    private ArrayList<Contact> listContact;
+    private ArrayList<User> listContact;
     private MyContactsRecyclerViewAdapter adapter;
     private Context context;
     private HashMap<String, String> mapPhoneContacts;
-
 
     public ContactsFragment() {
     }
@@ -93,12 +92,12 @@ public class ContactsFragment extends Fragment {
                         String contactId = iterator.next().toString();
                         String contactEmail = ((HashMap) mapContact.get(contactId)).get("email").toString();
                         if(mapPhoneContacts.get(contactEmail) != null) {
-                            Contact newContact = new Contact();
-                            newContact.contactId = contactId;
-                            newContact.email = contactEmail;
-                            newContact.name = mapPhoneContacts.get(contactEmail);
-                            Log.d(TAG, newContact.toString());
-                            listContact.add(newContact);
+                            User newUser = new User();
+                            newUser.setUserId(contactId);
+                            newUser.setEmail(contactEmail);
+                            newUser.setName(mapPhoneContacts.get(contactEmail));
+                            Log.d(TAG, newUser.toString());
+                            listContact.add(newUser);
                         }
                     }
                     adapter.notifyDataSetChanged();
@@ -148,15 +147,15 @@ public class ContactsFragment extends Fragment {
     }
 
     public interface ContactsFragmentInteractionListener {
-        void contactsFragmentInteractionClick(Contact item);
+        void contactsFragmentInteractionClick(User item);
     }
 
     public static class MyContactsRecyclerViewAdapter extends RecyclerView.Adapter<MyContactsRecyclerViewAdapter.ViewHolder> {
 
-        private final List<Contact> listContact;
+        private final List<User> listContact;
         private final ContactsFragmentInteractionListener mListener;
 
-        public MyContactsRecyclerViewAdapter(List<Contact> items, ContactsFragmentInteractionListener listener) {
+        public MyContactsRecyclerViewAdapter(List<User> items, ContactsFragmentInteractionListener listener) {
             listContact = items;
             mListener = listener;
         }
@@ -171,7 +170,7 @@ public class ContactsFragment extends Fragment {
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             holder.mItem = listContact.get(position);
-            holder.tvContactName.setText(listContact.get(position).name);
+            holder.tvContactName.setText(listContact.get(position).getName());
 
 
             holder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -193,7 +192,7 @@ public class ContactsFragment extends Fragment {
             @BindView(R.id.tvContactName) TextView tvContactName;
             @BindView(R.id.civAvatar) CircleImageView civAvatar;
 
-            Contact mItem;
+            User mItem;
 
             ViewHolder(View view) {
                 super(view);

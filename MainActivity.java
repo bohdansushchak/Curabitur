@@ -5,7 +5,6 @@ package sushchak.bohdan.curabitur;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -30,7 +29,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
@@ -39,8 +37,7 @@ import butterknife.ButterKnife;
 import de.hdodenhof.circleimageview.CircleImageView;
 import sushchak.bohdan.curabitur.data.StaticVar;
 import sushchak.bohdan.curabitur.data.UserDataSharedPreference;
-import sushchak.bohdan.curabitur.model.Contact;
-import sushchak.bohdan.curabitur.model.Thread;
+import sushchak.bohdan.curabitur.model.ThreadData;
 import sushchak.bohdan.curabitur.model.User;
 import sushchak.bohdan.curabitur.ui.ChatActivity;
 import sushchak.bohdan.curabitur.ui.ChatsFragment;
@@ -169,7 +166,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
     }
-    
+
     @Override
     protected void onStop() {
         super.onStop();
@@ -238,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void threadFragmentInteractionClick(Thread item, int clickType) {
+    public void threadFragmentInteractionClick(ThreadData item, int clickType) {
         switch (clickType){
             case ChatsFragment.ThreadFragmentInteractionListener.CLICK:
             {
@@ -276,10 +273,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     @Override
-    public void contactsFragmentInteractionClick(Contact item) {
+    public void contactsFragmentInteractionClick(User item) {
         Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-        intent.putExtra(StaticVar.STR_EXTRA_CONTACT_ID, item.contactId);
-        intent.putExtra(StaticVar.STR_EXTRA_CONTACT_NAME, item.name);
+
+        intent.putExtra(StaticVar.STR_EXTRA_CONTACT_ID, item.getUserId());
+        intent.putExtra(StaticVar.STR_EXTRA_CONTACT_NAME, item.getName());
         startActivity(intent);
 
     }

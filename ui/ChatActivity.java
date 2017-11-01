@@ -50,8 +50,6 @@ public class ChatActivity extends AppCompatActivity {
     @BindView(R.id.rvChat) RecyclerView rvChat;
     private String idChat;
 
-
-
     @BindView(R.id.etMessage) EditText etMessage;
 
     private ArrayList<Message> messages;
@@ -107,9 +105,9 @@ public class ChatActivity extends AppCompatActivity {
                 if (dataSnapshot.getValue() != null) {
                     HashMap mapMessage = (HashMap) dataSnapshot.getValue();
                     Message message = new Message();
-                    message.idSender = (String) mapMessage.get("idSender");
-                    message.text = (String) mapMessage.get("text");
-                    message.timestamp = (Long) mapMessage.get("timestamp");
+                    message.idSender = (String) mapMessage.get(Message.KEY_SENDER);
+                    message.text = (String) mapMessage.get(Message.KEY_TEXT);
+                    message.timestamp = (Long) mapMessage.get(Message.KEY_TIMESTAMP);
                     messages.add(message);
 
                     Log.d(TAG, message.toString());
@@ -243,7 +241,7 @@ public class ChatActivity extends AppCompatActivity {
         String content = etMessage.getText().toString().trim();
         if(content.length() > 0){
             etMessage.setText("");
-            Message newMessage = new Message();
+            final Message newMessage = new Message();
             newMessage.text = content;
             newMessage.idSender = mUser.getUserId();
             newMessage.timestamp = System.currentTimeMillis();
@@ -257,7 +255,9 @@ public class ChatActivity extends AppCompatActivity {
                     if(dataSnapshot != null){
                         HashMap map = (HashMap) dataSnapshot.getValue();
 
-                        map.put("idLastMessage", key);
+                        map.put("textLastMessage", newMessage.text);
+                        map.put("timeLastMessage", newMessage.timestamp);
+
                         reference.child("threads/" + idChat + "/details").setValue(map);
                     }
                 }

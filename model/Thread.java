@@ -5,6 +5,7 @@ public class Thread {
     private String thread_id;
     private String title_name;
 
+
     public String getThread_id() {
         return thread_id;
     }
