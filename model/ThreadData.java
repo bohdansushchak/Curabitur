@@ -5,18 +5,9 @@ import java.util.ArrayList;
 
 public class ThreadData extends Thread{
 
-    public ArrayList<User> listUserId;
-    private String avatarUrl;
+    public ArrayList<String> listUserId;
+
     private Message lastMessage;
-
-
-    public String getAvatarUrl() {
-        return avatarUrl;
-    }
-
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
-    }
 
     public Message getLastMessage() {
         return lastMessage;
@@ -35,7 +26,6 @@ public class ThreadData extends Thread{
         super.setTitle_name(thread.getTitle_name());
         listUserId = new ArrayList<>();
     }
-
 
     @Override
     public String toString() {

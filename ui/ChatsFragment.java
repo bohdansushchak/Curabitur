@@ -21,6 +21,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 
+import java.lang.ref.WeakReference;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ import sushchak.bohdan.curabitur.model.Message;
 import sushchak.bohdan.curabitur.model.Thread;
 import sushchak.bohdan.curabitur.model.ThreadData;
 import sushchak.bohdan.curabitur.model.User;
+import sushchak.bohdan.curabitur.utils.ImageUtils;
 
 
 public class ChatsFragment extends Fragment {
@@ -120,13 +122,8 @@ public class ChatsFragment extends Fragment {
                         while (iterator.hasNext()) {
                             HashMap map = (HashMap) mapUsers.get(iterator.next());
                             String userId = (String) map.get("user_id");
-                            String userAvatar = (String) map.get("user_avatar");
 
-                            User user = new User();
-                            user.setUserId(userId);
-                            user.setAvatar(userAvatar);
-
-                            threadData.listUserId.add(user);
+                            threadData.listUserId.add(userId);
 
                         }
                         reference.child("threads/" + thread.getThread_id() + "/details").addListenerForSingleValueEvent(new ValueEventListener() {
@@ -235,12 +232,12 @@ public class ChatsFragment extends Fragment {
                 holder.tvTimeLastMessage.setText("");
             }
 
-            /*Glide.with(mFragment)
-                    .load(thread.getAvatarUrl())
-                    .into(holder.civChatAvatar)
-                    .onLoadFailed(mFragment.getResources().getDrawable(R.drawable.user_avatar_default));*/
 
-            holder.civChatAvatar.setImageResource(R.drawable.user_avatar_default);
+            WeakReference<CircleImageView> reference = new WeakReference<CircleImageView>(holder.civChatAvatar);
+            for (String userId: thread.listUserId) {
+                if(!userId.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()))
+                    ImageUtils.setUserAvatar(reference, null, userId, R.drawable.user_avatar_default);
+            }
 
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
