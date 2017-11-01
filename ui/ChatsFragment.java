@@ -70,7 +70,6 @@ public class ChatsFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_threads_list, container, false);
 
-        // Set the adapter
         if (view instanceof RecyclerView) {
             RecyclerView recyclerView = (RecyclerView) view;
             adapter = new MyThreadsRecyclerViewAdapter(ChatsFragment.this, listDataThread, mListener);
@@ -135,8 +134,15 @@ public class ChatsFragment extends Fragment {
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 if(dataSnapshot.getValue() != null){
                                     HashMap mapDetails = (HashMap) dataSnapshot.getValue();
-                                    String textLastMessage = (String) mapDetails.get("textLastMessage");
-                                    long timeLastMessage = (Long) mapDetails.get("timeLastMessage");
+                                    String textLastMessage;
+                                    long timeLastMessage;
+                                    try {
+                                        textLastMessage = (String) mapDetails.get("textLastMessage");
+                                        timeLastMessage = (Long) mapDetails.get("timeLastMessage");
+                                    }catch (NullPointerException e){
+                                        textLastMessage = "";
+                                        timeLastMessage = 0;
+                                    }
 
                                     Message lastMessage = new Message();
                                     lastMessage.text = textLastMessage;
@@ -221,9 +227,13 @@ public class ChatsFragment extends Fragment {
             holder.tvChatName.setText(thread.getTitle_name());
             holder.tvLastMessage.setText(thread.getLastMessage().text);
 
-            DateFormat df = new SimpleDateFormat("HH:mm:ss");
-            String time = df.format(thread.getLastMessage().timestamp);
-            holder.tvTimeLastMessage.setText(time);
+            if(thread.getLastMessage().timestamp != 0) {
+                DateFormat df = new SimpleDateFormat("HH:mm:ss");
+                String time = df.format(thread.getLastMessage().timestamp);
+                holder.tvTimeLastMessage.setText(time);
+            }else {
+                holder.tvTimeLastMessage.setText("");
+            }
 
             /*Glide.with(mFragment)
                     .load(thread.getAvatarUrl())

@@ -77,7 +77,7 @@ public class SettingsActivity extends AppCompatActivity {
         user = UserDataSharedPreference.getInstance(SettingsActivity.this).getUserData();
 
         WeakReference<CircleImageView> reference = new WeakReference<CircleImageView>(civAvatar);
-        ImageUtils.setUserAvatar(reference, user, R.drawable.user_avatar_default);
+        ImageUtils.setUserAvatar(reference, null, user, R.drawable.user_avatar_default);
 
         tvUserName.setText(user.getName());
         tvUserStatus.setText("online");

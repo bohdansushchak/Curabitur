@@ -5,7 +5,6 @@ package sushchak.bohdan.curabitur;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -18,12 +17,10 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.cocosw.bottomsheet.BottomSheet;
 import com.google.firebase.auth.FirebaseAuth;
@@ -104,7 +101,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         chatsFragment = new ChatsFragment();
         contactsFragment = new ContactsFragment();
 
-        replaceFragment(chatsFragment);
+        if(getSupportFragmentManager().getBackStackEntryCount() == 0)
+            replaceFragment(chatsFragment);
+        else {
+            getSupportFragmentManager().popBackStack();
+            replaceFragment(chatsFragment);
+        }
     }
 
     private void replaceFragment (Fragment fragment){
@@ -153,6 +155,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 }
                             });
 
+
                     initFragments();
 
                 } else {
@@ -170,7 +173,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.tvUserName.setText(currentUser.getName());
 
         WeakReference<CircleImageView> reference = new WeakReference<>(civUserAvatar);
-        ImageUtils.setUserAvatar(reference, currentUser, R.drawable.user_avatar_default);
+        ImageUtils.setUserAvatar(reference, null,currentUser, R.drawable.user_avatar_default);
 
     }
 
@@ -239,6 +242,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void threadFragmentInteractionClick(ThreadData item, int clickType) {
+        if (getSupportFragmentManager().getBackStackEntryCount() > 1)
+            getSupportFragmentManager().popBackStack();
+
         switch (clickType){
             case ChatsFragment.ThreadFragmentInteractionListener.CLICK:
             {

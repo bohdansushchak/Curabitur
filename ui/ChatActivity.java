@@ -29,6 +29,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -50,6 +51,9 @@ public class ChatActivity extends AppCompatActivity {
     @BindView(R.id.rvChat) RecyclerView rvChat;
     private String idChat;
 
+
+    private DatabaseReference reference;
+
     @BindView(R.id.etMessage) EditText etMessage;
 
     private ArrayList<Message> messages;
@@ -57,7 +61,7 @@ public class ChatActivity extends AppCompatActivity {
     private ListMessageAdapter adapter;
     private LinearLayoutManager linearManager;
 
-    protected User mUser;
+    protected User currentUser;
     private User chatUser;
 
     @BindView(R.id.civ_Chat_avatar) CircleImageView civChatAvatar;
@@ -73,33 +77,82 @@ public class ChatActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbarChatActivity);
         setSupportActionBar(toolbar);
 
+        reference = FirebaseDatabase.getInstance().getReference();
 
-        mUser = UserDataSharedPreference.getInstance(ChatActivity.this).getUserData();
+        currentUser = UserDataSharedPreference.getInstance(ChatActivity.this).getUserData();
 
-        Log.d(TAG, mUser.toString());
+        Log.d(TAG, currentUser.toString());
 
-        chatUser = new User();
         Intent intent = getIntent();
         idChat = intent.getStringExtra(StaticVar.STR_EXTRA_CHAT_ID);
         if(idChat == null){
-            chatUser.setUserId(intent.getStringExtra(StaticVar.STR_EXTRA_CONTACT_ID));
-            chatUser.setName(intent.getStringExtra(StaticVar.STR_EXTRA_CONTACT_NAME));
-            createNewChat();
+            final String chatUserId = intent.getStringExtra(StaticVar.STR_EXTRA_CONTACT_ID);
+            reference.child("users/" + chatUserId).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if(dataSnapshot.getValue() != null) {
+                        HashMap mapContactData = (HashMap) dataSnapshot.getValue();
+                        String name = mapContactData.get("name").toString();
+                        String email = mapContactData.get("email").toString();
+                        String avatar = mapContactData.get("avatar").toString();
+                        String phone = mapContactData.get("phone").toString();
+
+                        chatUser = new User(chatUserId, name, email, avatar, phone);
+                        createNewChat();
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+        }else {
+            viewUserData();
+            messageListener(idChat);
         }
 
-        //getUserData();
-
         messages = new ArrayList<>();
-
-        //etMessage = (EditText) findViewById(R.id.etMessage);
-        //rvChat = (RecyclerView) findViewById(R.id.rvChat);
 
         adapter = new ListMessageAdapter(ChatActivity.this, messages);
         linearManager = new LinearLayoutManager(ChatActivity.this, LinearLayoutManager.VERTICAL, false);
         rvChat.setLayoutManager(linearManager);
         rvChat.setAdapter(adapter);
 
-        FirebaseDatabase.getInstance().getReference().child("threads/" + idChat + "/messages").addChildEventListener(new ChildEventListener() {
+    }
+
+    private void viewUserData(){
+        reference.child("threads/" + idChat + "/user").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getValue() != null){
+                    HashMap mapUsers = (HashMap) dataSnapshot.getValue();
+                    Iterator iterator = mapUsers.keySet().iterator();
+                    while (iterator.hasNext()) {
+                        HashMap mapThread = (HashMap) mapUsers.get(iterator.next());
+                        String idUser = mapThread.get("user_id").toString();
+
+                        if(!idUser.equals(currentUser.getUserId())) {
+                            WeakReference<CircleImageView> civReference = new WeakReference<>(civChatAvatar);
+                            WeakReference<TextView> tvNameReference = new WeakReference<>(tvChatName);
+                            ImageUtils.setUserAvatar(civReference, tvNameReference,idUser, R.drawable.user_avatar_default);
+                        }
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void messageListener(String idChat){
+        reference.child("threads/" + idChat + "/messages").addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 if (dataSnapshot.getValue() != null) {
@@ -110,7 +163,6 @@ public class ChatActivity extends AppCompatActivity {
                     message.timestamp = (Long) mapMessage.get(Message.KEY_TIMESTAMP);
                     messages.add(message);
 
-                    Log.d(TAG, message.toString());
                     adapter.notifyDataSetChanged();
                     linearManager.scrollToPosition(messages.size() - 1);
                 }
@@ -138,69 +190,38 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
-    private void viewUserData(){
-
-        WeakReference<CircleImageView> reference = new WeakReference<>(civChatAvatar);
-        ImageUtils.setUserAvatar(reference, chatUser, R.drawable.user_avatar_default);
-
-        tvChatName.setText(chatUser.getName());
-    }
-
-    private void getUserData(){
-        FirebaseDatabase.getInstance().getReference().child("users/" + chatUser.getUserId()).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if(dataSnapshot != null){
-                    HashMap mapUserData = (HashMap) dataSnapshot.getValue();
-                    String name = (String) mapUserData.get("name");
-                    String avatar = (String) mapUserData.get("avatar");
-                    String email = (String) mapUserData.get("email");
-                    String phone = (String) mapUserData.get("phone");
-
-                    chatUser.setName(name);
-                    chatUser.setAvatar(avatar);
-                    chatUser.setEmail(email);
-                    chatUser.setPhone(phone);
-                    viewUserData();
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
 
     private void createNewChat(){
         Thread thread = new Thread();
 
-        String threadId = FirebaseDatabase.getInstance().getReference().child("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/threads").push().getKey();
+        //add chat to current user
+        String threadId = reference.child("users/" + currentUser.getUserId() + "/threads").push().getKey();
         thread.setThread_id(threadId);
         thread.setTitle_name(chatUser.getName());
+        reference.child("users/" + currentUser.getUserId() + "/threads").push().setValue(thread);
 
-        FirebaseDatabase.getInstance().getReference().child("users/" + mUser.getUserId() + "/threads").push().setValue(thread);
-
+        //create details in chat
         HashMap<String, Object> details = new HashMap<>();
         details.put("creation_date", System.currentTimeMillis());
-        details.put("creator_id", mUser.getUserId());
+        details.put("creator_id", currentUser.getUserId());
+        reference.child("threads/" + thread.getThread_id() + "/details").setValue(details);
 
-        FirebaseDatabase.getInstance().getReference().child("threads/" + thread.getThread_id() + "/details").setValue(details);
-
+        //add user in chat
         HashMap<String, String> map = new HashMap<>();
-        map.put("user_id", mUser.getUserId());
-        map.put("user_avatar", mUser.getAvatar());
-        FirebaseDatabase.getInstance().getReference().child("threads/" + thread.getThread_id() + "/user").push().setValue(map);
+        map.put("user_id", currentUser.getUserId());
+        reference.child("threads/" + thread.getThread_id() + "/user").push().setValue(map);
+
         map = new HashMap<>();
         map.put("user_id", chatUser.getUserId());
-        map.put("user_avatar", chatUser.getAvatar());
-        FirebaseDatabase.getInstance().getReference().child("threads/" + thread.getThread_id() + "/user").push().setValue(map);
+        reference.child("threads/" + thread.getThread_id() + "/user").push().setValue(map);
 
-
-        thread.setTitle_name(mUser.getName());
-        FirebaseDatabase.getInstance().getReference().child("users/" + chatUser.getUserId() + "/threads").push().setValue(thread);
+        thread.setTitle_name(currentUser.getName());
+        reference.child("users/" + chatUser.getUserId() + "/threads").push().setValue(thread);
 
         idChat = thread.getThread_id();
+
+        messageListener(idChat);
+        viewUserData();
     }
 
     @Override
@@ -235,15 +256,15 @@ public class ChatActivity extends AppCompatActivity {
 
     public void onClickSend(View view){
 
-        final DatabaseReference  reference = FirebaseDatabase.getInstance().getReference();
+        //final DatabaseReference  reference = FirebaseDatabase.getInstance().getReference();
 
-        Log.d(TAG, mUser.toString());
+        Log.d(TAG, currentUser.toString());
         String content = etMessage.getText().toString().trim();
         if(content.length() > 0){
             etMessage.setText("");
             final Message newMessage = new Message();
             newMessage.text = content;
-            newMessage.idSender = mUser.getUserId();
+            newMessage.idSender = currentUser.getUserId();
             newMessage.timestamp = System.currentTimeMillis();
             final String key = reference.child("threads/" + idChat + "/messages").push().getKey();
 
