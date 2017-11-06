@@ -51,7 +51,6 @@ public class ChatActivity extends AppCompatActivity {
     @BindView(R.id.rvChat) RecyclerView rvChat;
     private String idChat;
 
-
     private DatabaseReference reference;
 
     @BindView(R.id.etMessage) EditText etMessage;
@@ -76,6 +75,8 @@ public class ChatActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbarChatActivity);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
 
         reference = FirebaseDatabase.getInstance().getReference();
 
@@ -119,7 +120,13 @@ public class ChatActivity extends AppCompatActivity {
         linearManager = new LinearLayoutManager(ChatActivity.this, LinearLayoutManager.VERTICAL, false);
         rvChat.setLayoutManager(linearManager);
         rvChat.setAdapter(adapter);
+    }
 
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        finish();
+        return true;
     }
 
     private void viewUserData(){
@@ -322,14 +329,14 @@ public class ChatActivity extends AppCompatActivity {
             if(holder instanceof ItemMessageUserHolder){
 
                 ((ItemMessageUserHolder) holder).tvMessage.setText(messages.get(position).text);
-                DateFormat df = new SimpleDateFormat("HH:mm:ss");
+                DateFormat df = new SimpleDateFormat("HH:mm");
                 String time = df.format(messages.get(position).timestamp);
                 ((ItemMessageUserHolder) holder).tvTime.setText(time);
 
             } else if(holder instanceof ItemMessageFriendHolder){
 
                 ((ItemMessageFriendHolder) holder).tvMessage.setText(messages.get(position).text);
-                DateFormat df = new SimpleDateFormat("HH:mm:ss");
+                DateFormat df = new SimpleDateFormat("HH:mm");
                 String time = df.format(messages.get(position).timestamp);
                 ((ItemMessageFriendHolder) holder).tvTime.setText(time);
             }

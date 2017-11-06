@@ -287,7 +287,7 @@ public class LoginActivity extends AppCompatActivity implements
                         String avatar = mapContactData.get("avatar").toString();
                         String phone = mapContactData.get("phone").toString();
 
-                        User user = new User(userId, name, email, avatar, phone);
+                        UserDB user = new UserDB(userId, name, email, avatar, phone);
 
                         UserDataSharedPreference.getInstance(LoginActivity.this).saveUserData(user);
                     }

@@ -6,6 +6,8 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.DrawableUtils;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -78,6 +80,11 @@ public class ChatsFragment extends Fragment {
             RecyclerView recyclerView = (RecyclerView) view;
             adapter = new MyThreadsRecyclerViewAdapter(ChatsFragment.this, listDataThread, mListener);
             recyclerView.setAdapter(adapter);
+
+            DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
+                    DividerItemDecoration.VERTICAL);
+            dividerItemDecoration.setDrawable(getResources().getDrawable(R.drawable.divider_chat_list));
+            recyclerView.addItemDecoration(dividerItemDecoration);
         }
         return view;
     }
@@ -226,7 +233,7 @@ public class ChatsFragment extends Fragment {
             holder.tvLastMessage.setText(thread.getLastMessage().text);
 
             if(thread.getLastMessage().timestamp != 0) {
-                DateFormat df = new SimpleDateFormat("HH:mm:ss");
+                DateFormat df = new SimpleDateFormat("HH:mm");
                 String time = df.format(thread.getLastMessage().timestamp);
                 holder.tvTimeLastMessage.setText(time);
             }else {

@@ -13,7 +13,7 @@ public class Message {
 
     @Override
     public String toString() {
-        return "Message{" +
+        return "MessageDB{" +
                 "idSender='" + idSender + '\'' +
                 ", text='" + text + '\'' +
                 ", timestamp=" + timestamp +

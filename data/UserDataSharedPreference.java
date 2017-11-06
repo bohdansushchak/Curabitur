@@ -41,7 +41,7 @@ public class UserDataSharedPreference {
 
     public void saveUserData(User user) {
         if (user == null)
-            throw new NullPointerException("User cannot be null");
+            throw new NullPointerException("UserDB cannot be null");
 
         editor = preference.edit();
         editor.putString(SHARE_KEY_UID, user.getUserId());
